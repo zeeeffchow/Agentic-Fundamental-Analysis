@@ -23,27 +23,34 @@ export class AIImageService {
    */
   static async getBestLogo(
     ticker: string,
-    companyImages?: CompanyImages
+    companyImages?: CompanyImages | null
   ): Promise<string> {
     // If we have AI-retrieved logo URLs, try them in order
     if (companyImages?.logo_urls?.length) {
       for (const logoUrl of companyImages.logo_urls) {
         try {
           const isValid = await this.validateImageUrl(logoUrl);
-          if (isValid) return logoUrl;
-        } catch {
+          if (isValid) {
+            console.log(`✅ Using AI logo URL: ${logoUrl}`);
+            return logoUrl;
+          }
+        } catch (error) {
+          console.warn(`❌ Logo URL failed: ${logoUrl}`, error);
           continue; // Try next URL
         }
       }
       
       // If all AI URLs fail, use AI-provided fallback
       if (companyImages.fallback_logo_url) {
+        console.log(`⚠️ Using AI fallback logo: ${companyImages.fallback_logo_url}`);
         return companyImages.fallback_logo_url;
       }
     }
 
     // Final fallback
-    return this.generateFallbackLogo(ticker);
+    const finalFallback = this.generateFallbackLogo(ticker);
+    console.log(`🔄 Using generated fallback logo: ${finalFallback}`);
+    return finalFallback;
   }
 
   /**
@@ -51,7 +58,7 @@ export class AIImageService {
    */
   static async getBestCEOPhoto(
     ceoName: string,
-    companyImages?: CompanyImages
+    companyImages?: CompanyImages | null
   ): Promise<string | null> {
     if (!ceoName) return null;
 
@@ -60,35 +67,55 @@ export class AIImageService {
       for (const photoUrl of companyImages.ceo_photo_urls) {
         try {
           const isValid = await this.validateImageUrl(photoUrl);
-          if (isValid) return photoUrl;
-        } catch {
+          if (isValid) {
+            console.log(`✅ Using AI CEO photo: ${photoUrl}`);
+            return photoUrl;
+          }
+        } catch (error) {
+          console.warn(`❌ CEO photo URL failed: ${photoUrl}`, error);
           continue; // Try next URL
         }
       }
+    } else {
+      console.warn(`⚠️ No CEO photo URLs found for ${ceoName}`);
     }
 
     // Try AI-provided CEO fallback
     if (companyImages?.fallback_ceo_url) {
+      console.log(`🔄 Using AI CEO fallback: ${companyImages.fallback_ceo_url}`);
       return companyImages.fallback_ceo_url;
     }
 
     // Generate final fallback
-    return this.generateCEOFallback(ceoName);
+    const finalFallback = this.generateCEOFallback(ceoName);
+    console.log(`🔄 Using generated CEO fallback: ${finalFallback}`);
+    return finalFallback;
   }
 
   /**
-   * Quick validation check for image URLs
+   * Better image URL validation using actual image loading
    */
   static async validateImageUrl(url: string): Promise<boolean> {
-    try {
-      await fetch(url, { 
-        method: 'HEAD',
-        mode: 'no-cors'
-      });
-      return true; // If no error thrown, assume it's valid
-    } catch {
-      return false;
-    }
+    return new Promise((resolve) => {
+      const img = new Image();
+      const timeout = setTimeout(() => {
+        resolve(false);
+      }, 3000); // 3 second timeout
+
+      img.onload = () => {
+        clearTimeout(timeout);
+        resolve(true);
+      };
+      
+      img.onerror = () => {
+        clearTimeout(timeout);
+        resolve(false);
+      };
+      
+      // Handle CORS issues gracefully
+      img.crossOrigin = 'anonymous';
+      img.src = url;
+    });
   }
 
   /**

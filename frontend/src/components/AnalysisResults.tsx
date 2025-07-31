@@ -107,10 +107,31 @@ export const AnalysisResults: React.FC = () => {
     analysis, 
     companyImages 
   }) => {
-    const fallbackLogo = AIImageService.generateFallbackLogo(analysis.company.ticker);
-    const logoUrl = companyImages?.logo_urls?.[0] || null;
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [logoLoading, setLogoLoading] = useState(true);
     
-    const { currentUrl: displayLogoUrl, isLoading: logoLoading } = useImageLoader(
+    // Generate fallback logo
+    const fallbackLogo = AIImageService.generateFallbackLogo(analysis.company.ticker);
+    
+    // Load the best logo asynchronously
+    useEffect(() => {
+      const loadBestLogo = async () => {
+        setLogoLoading(true);
+        try {
+          const bestLogo = await AIImageService.getBestLogo(analysis.company.ticker, companyImages);
+          setLogoUrl(bestLogo);
+        } catch (error) {
+          console.error('Error loading logo:', error);
+          setLogoUrl(fallbackLogo);
+        } finally {
+          setLogoLoading(false);
+        }
+      };
+
+      loadBestLogo();
+    }, [analysis.company.ticker, companyImages]);
+
+    const { currentUrl: displayLogoUrl, isLoading: imageLoading } = useImageLoader(
       logoUrl,
       fallbackLogo
     );
@@ -121,7 +142,7 @@ export const AnalysisResults: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-gray-200/50 shadow-sm overflow-hidden">
-                {logoLoading ? (
+                {(logoLoading || imageLoading) ? (
                   <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
                 ) : (
                   <img 
@@ -130,6 +151,7 @@ export const AnalysisResults: React.FC = () => {
                     className="w-10 h-10 object-contain"
                     onError={(e) => {
                       // Final fallback if image fails to load
+                      console.warn(`Image failed to load: ${e.currentTarget.src}`);
                       e.currentTarget.src = fallbackLogo;
                     }}
                   />
@@ -262,7 +284,7 @@ export const AnalysisResults: React.FC = () => {
           {activeTab === 'risk' && <RiskTab analysis={analysis} />}
           {activeTab === 'valuation' && <ValuationTab analysis={analysis} />}
           {activeTab === 'management' && (
-            <ManagementTabWithAIImages 
+            <ManagementAnalysis 
               analysis={analysis} 
               companyImages={companyImages || undefined} 
             />
@@ -733,20 +755,46 @@ const ValuationTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
   );
 };
 
-
-const ManagementTabWithAIImages: React.FC<{ 
+const ManagementAnalysis: React.FC<{
   analysis: AnalysisResponse;
-  companyImages?: CompanyImages;
+  companyImages: CompanyImages | null;
 }> = ({ analysis, companyImages }) => {
   const managementData = analysis.analysis_data?.management_analysis || {};
+  const [ceoPhotoUrl, setCeoPhotoUrl] = useState<string | null>(null);
+  const [ceoLoading, setCeoLoading] = useState(true);
   
-  // Get AI-powered CEO photo
-  const ceoPhotoUrl = companyImages?.ceo_photo_urls?.[0] || null;
+  // Generate CEO fallback
   const ceoFallbackUrl = managementData.ceo_name 
     ? AIImageService.generateCEOFallback(managementData.ceo_name)
     : null;
-  
-  const { currentUrl: displayCeoUrl, isLoading: ceoLoading } = useImageLoader(
+
+  // Load the best CEO photo asynchronously
+  useEffect(() => {
+    const loadBestCEOPhoto = async () => {
+      if (!managementData.ceo_name) {
+        setCeoLoading(false);
+        return;
+      }
+
+      setCeoLoading(true);
+      try {
+        const bestPhoto = await AIImageService.getBestCEOPhoto(
+          managementData.ceo_name, 
+          companyImages
+        );
+        setCeoPhotoUrl(bestPhoto);
+      } catch (error) {
+        console.error('Error loading CEO photo:', error);
+        setCeoPhotoUrl(ceoFallbackUrl);
+      } finally {
+        setCeoLoading(false);
+      }
+    };
+
+    loadBestCEOPhoto();
+  }, [managementData.ceo_name, companyImages]);
+
+  const { currentUrl: displayCeoUrl, isLoading: imageLoading } = useImageLoader(
     ceoPhotoUrl,
     ceoFallbackUrl || ''
   );
@@ -790,7 +838,7 @@ const ManagementTabWithAIImages: React.FC<{
                 <div className="text-2xl font-bold mb-1">
                   {managementData.ceo_tenure >= 10 ? 'Very Experienced' :
                    managementData.ceo_tenure >= 5 ? 'Experienced' :
-                   managementData.ceo_tenure >= 2 ? 'Moderate' : 'New'}
+                   managementData.ceo_tenure >= 2 ? 'Developing' : 'New'}
                 </div>
                 <div className="text-blue-100 text-sm">CEO Experience</div>
               </div>
@@ -798,43 +846,6 @@ const ManagementTabWithAIImages: React.FC<{
           </div>
         </div>
       )}
-
-      {/* Key Metrics */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {managementData.management_quality && (
-          <div className="p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Management Quality</h3>
-              <div className="text-3xl font-bold text-blue-600">{managementData.management_quality}/10</div>
-            </div>
-            
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden mb-2">
-              <div 
-                className="h-3 rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out"
-                style={{ width: `${(managementData.management_quality / 10) * 100}%` }}
-              ></div>
-            </div>
-            <p className="text-sm text-gray-600">Leadership effectiveness and strategic vision</p>
-          </div>
-        )}
-        
-        {managementData.corporate_governance && (
-          <div className="p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-900">Corporate Governance</h3>
-              <div className="text-3xl font-bold text-green-600">{managementData.corporate_governance}/10</div>
-            </div>
-            
-            <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden mb-2">
-              <div 
-                className="h-3 rounded-full bg-gradient-to-r from-green-500 to-green-600 transition-all duration-500 ease-out"
-                style={{ width: `${(managementData.corporate_governance / 10) * 100}%` }}
-              ></div>
-            </div>
-            <p className="text-sm text-gray-600">Board oversight and shareholder alignment</p>
-          </div>
-        )}
-      </div>
 
       {/* CEO Details & Track Record with AI Photo */}
       {(managementData.ceo_name || managementData.ceo_tenure || managementData.track_record) && (
@@ -851,7 +862,7 @@ const ManagementTabWithAIImages: React.FC<{
                 {/* AI-Powered CEO Photo */}
                 {managementData.ceo_name && ceoFallbackUrl && (
                   <div className="flex-shrink-0">
-                    {ceoLoading ? (
+                    {(ceoLoading || imageLoading) ? (
                       <div className="w-14 h-14 bg-gray-200 rounded-full animate-pulse" />
                     ) : (
                       <img 
@@ -860,6 +871,7 @@ const ManagementTabWithAIImages: React.FC<{
                         className="w-14 h-14 rounded-full object-cover border-2 border-indigo-200 shadow-sm"
                         onError={(e) => {
                           // Final fallback
+                          console.warn(`CEO image failed to load: ${e.currentTarget.src}`);
                           if (ceoFallbackUrl) {
                             e.currentTarget.src = ceoFallbackUrl;
                           }
@@ -894,6 +906,16 @@ const ManagementTabWithAIImages: React.FC<{
               <p className="text-gray-700 leading-relaxed">{managementData.track_record}</p>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Debug Information (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs">
+          <strong>Debug Info:</strong>
+          <div>CEO Photo URLs: {JSON.stringify(companyImages?.ceo_photo_urls || [])}</div>
+          <div>Current CEO Photo: {ceoPhotoUrl || 'null'}</div>
+          <div>Fallback CEO URL: {ceoFallbackUrl || 'null'}</div>
         </div>
       )}
     </div>

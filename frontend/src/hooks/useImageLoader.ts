@@ -25,27 +25,40 @@ export const useImageLoader = (
     setIsLoading(true);
     setHasError(false);
 
-    // Preload the image to check if it works
+    // Create a new image element to test loading
     const img = new Image();
     
+    // Set up success handler
     img.onload = () => {
       setCurrentUrl(url);
       setIsLoading(false);
       setHasError(false);
     };
     
+    // Set up error handler
     img.onerror = () => {
+      console.warn(`Failed to load image: ${url}`);
       setCurrentUrl(fallbackUrl);
       setIsLoading(false);
       setHasError(true);
     };
     
+    // Add timeout for slow-loading images
+    const timeout = setTimeout(() => {
+      console.warn(`Image load timeout: ${url}`);
+      setCurrentUrl(fallbackUrl);
+      setIsLoading(false);
+      setHasError(true);
+    }, 5000); // 5 second timeout
+    
+    // Start loading the image
     img.src = url;
 
-    // Cleanup
+    // Cleanup function
     return () => {
       img.onload = null;
       img.onerror = null;
+      clearTimeout(timeout);
     };
   }, [url, fallbackUrl]);
 
