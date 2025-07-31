@@ -111,6 +111,34 @@ class CompanyKnowledgeCheckOutput(BaseIOSchema):
     last_analysis_date: Optional[str] = Field(None, description="Date of last analysis if known")
     needs_full_analysis: bool = Field(..., description="Whether full analysis is needed")
 
+class CompanyWebInfo(BaseIOSchema):
+    """Company web presence and visual identity info."""
+    ticker: str = Field(..., description="Stock ticker symbol")
+    company_name: str = Field(..., description="Full official company name")
+    website_domain: str = Field(..., description="Primary website domain (e.g., apple.com)")
+    logo_description: str = Field(..., description="Description of company logo for image search")
+    ceo_name: Optional[str] = Field(None, description="Current CEO full name")
+    ceo_description: Optional[str] = Field(None, description="CEO description for image search")
+    founded_year: Optional[int] = Field(None, description="Year company was founded")
+    headquarters: Optional[str] = Field(None, description="Company headquarters location")
+    industry_sector: Optional[str] = Field(None, description="Primary industry sector")
+
+class ImageSearchResult(BaseIOSchema):
+    """Result from image search agent."""
+    image_urls: List[str] = Field(..., description="List of relevant image URLs")
+    search_strategy: str = Field(..., description="Strategy used to find images")
+    confidence_score: float = Field(..., description="Confidence in results (0-1)")
+    fallback_needed: bool = Field(..., description="Whether fallback methods should be used")
+
+class CompanyImages(BaseIOSchema):
+    """Complete company image information."""
+    ticker: str = Field(..., description="Stock ticker symbol")
+    logo_urls: List[str] = Field(..., description="Company logo URLs (ordered by preference)")
+    ceo_photo_urls: List[str] = Field(default=[], description="CEO photo URLs")
+    fallback_logo_url: str = Field(..., description="Fallback logo URL")
+    fallback_ceo_url: Optional[str] = Field(None, description="Fallback CEO photo URL")
+    company_info: Optional[dict] = Field(None, description="Additional company information")
+
 # ===== AGENT FACTORY FUNCTIONS (Creates Fresh Agents Each Time) =====
 
 def create_knowledge_agent(client, ticker: str):
@@ -151,7 +179,7 @@ def create_financial_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are analyzing {ticker} specifically.",
-            "You are a financial data analyst specializing in extracting and processing company financial statements.",
+            "You are an experienced expert financial data analyst specializing in extracting and processing company financial statements.",
             f"You are analyzing {ticker} company financial data only.",
             "Your goal is to extract key financial metrics accurately for this specific company."
         ],
@@ -185,7 +213,7 @@ def create_ratio_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are calculating ratios for {ticker} specifically.",
-            "You are a financial ratio calculation specialist.",
+            "You are an expert financial ratio calculation specialist.",
             "You calculate key financial ratios used in fundamental analysis.",
             "Your ratios help investors understand company performance and health."
         ],
@@ -220,7 +248,7 @@ def create_business_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are analyzing {ticker} business specifically.",
-            "You are a business analyst specializing in company research and competitive analysis.",
+            "You are an expert business analyst specializing in company research and competitive analysis.",
             f"You understand {ticker}'s business model, market positioning, and competitive dynamics.",
             f"Your analysis helps investors understand what {ticker} does and how it competes."
         ],
@@ -255,7 +283,7 @@ def create_risk_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are assessing risks for {ticker} specifically.",
-            "You are a risk assessment specialist for investment analysis.",
+            "You are an expert risk assessment specialist for investment analysis.",
             f"You evaluate {ticker}'s concentration risk, competitive threats, disruption potential, and regulatory risks.",
             f"Your risk scores help investors understand {ticker}'s potential downsides."
         ],
@@ -271,6 +299,7 @@ def create_risk_agent(client, ticker: str):
             f"Analyze {ticker} specifically, not Apple or any other company",
             "Use 1-10 scale where 1 = very low risk, 10 = very high risk",
             "Be objective and evidence-based in risk assessment"
+            "Your risk summary should be few paragraphs long. It should go into enough high-level details."
         ]
     )
     
@@ -290,7 +319,7 @@ def create_valuation_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are valuing {ticker} specifically.",
-            "You are a valuation specialist who determines if stocks are fairly priced.",
+            "You are an expert valuation specialist who determines if stocks are fairly priced.",
             f"You calculate {ticker}'s key valuation ratios and estimate intrinsic value.",
             f"You compare {ticker}'s current prices to fair value estimates."
         ],
@@ -326,7 +355,7 @@ def create_management_agent(client, ticker: str):
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are analyzing {ticker}'s management specifically.",
-            "You are a management analysis specialist who evaluates leadership teams.",
+            "You are an expert management analysis specialist who evaluates leadership teams.",
             f"You assess {ticker}'s CEO background, management track record, and corporate governance.",
             f"Strong management is crucial for {ticker}'s long-term investment success."
         ],
@@ -341,7 +370,8 @@ def create_management_agent(client, ticker: str):
             f"CRITICAL: All output must have ticker field set to '{ticker}'",
             f"Analyze {ticker}'s management specifically, not Tim Cook or Apple",
             "Use 1-10 scale for management quality and governance scores",
-            "Focus on factual track record, not speculation"
+            "Focus on factual track record, not speculation",
+            "Provide some factual detailed justification in the form of examples of what the management has done, and what impact on the company that has led to"
         ]
     )
     
@@ -428,6 +458,134 @@ def create_decision_agent(client, ticker: str):
         )
     )
 
+def create_company_info_agent(client, ticker: str):
+    """Create a fresh company info agent for specific ticker."""
+    system_prompt_generator = SystemPromptGenerator(
+        background=[
+            f"You are researching {ticker} company information specifically.",
+            "You are a company research specialist who finds comprehensive company information.",
+            f"You research {ticker} to find their official website, CEO, and visual identity details.",
+            f"You focus on accurate, up-to-date information about {ticker} from reliable sources."
+        ],
+        steps=[
+            f"Research {ticker}'s official website domain (without www, just domain.com)",
+            f"Find {ticker}'s current CEO's full name and basic background",
+            f"Describe {ticker}'s company logo in detail for image search purposes",
+            f"Provide a description of {ticker}'s CEO that would help in image searches",
+            f"Include key {ticker} company details like founding year and headquarters",
+            f"Verify {ticker} information accuracy from multiple sources"
+        ],
+        output_instructions=[
+            f"CRITICAL: All output must have ticker field set to '{ticker}'",
+            f"Research {ticker} specifically, not any other company",
+            "Always provide the clean domain without 'www' (e.g., 'apple.com' not 'www.apple.com')",
+            "CEO name should be full formal name (e.g., 'Timothy Cook' not 'Tim Cook')",
+            "Logo description should be specific enough for image search",
+            "CEO description should include title and company for better image results",
+            "Only include information you're confident about"
+        ]
+    )
+    
+    return BaseAgent(
+        config=BaseAgentConfig(
+            client=client,
+            model="gpt-4o-mini",
+            system_prompt_generator=system_prompt_generator,
+            memory=AgentMemory(),  # Fresh memory
+            input_schema=CompanyInput,
+            output_schema=CompanyWebInfo
+        )
+    )
+
+def create_logo_search_agent(client, ticker: str):
+    """Create a fresh logo search agent for specific company."""
+    system_prompt_generator = SystemPromptGenerator(
+        background=[
+            f"You are finding {ticker} company logo specifically.",
+            "You are an image search specialist who finds high-quality company logos.",
+            f"You know the best methods for finding {ticker}'s official logo.",
+            f"You prioritize official, high-resolution {ticker} logos from reliable sources."
+        ],
+        steps=[
+            f"Analyze the search requirements for {ticker} logo",
+            f"Determine the best search strategy for {ticker} logo (Clearbit API, company website, brand assets)",
+            f"For {ticker}: try Clearbit logo API first with company domain",
+            f"For {ticker}: search company's official website for brand assets",
+            f"For {ticker}: check brand guidelines pages and press kits",
+            f"Provide multiple {ticker} logo URL options ranked by likely quality"
+        ],
+        output_instructions=[
+            f"Focus specifically on {ticker} logos only",
+            "Provide direct image URLs when possible",
+            "Order URLs by likely image quality and relevance",
+            "Include confidence score based on search method reliability",
+            "Prefer Clearbit API format: https://logo.clearbit.com/domain.com",
+            f"Be realistic about what {ticker} images are publicly available"
+        ]
+    )
+    
+    return BaseAgent(
+        config=BaseAgentConfig(
+            client=client,
+            model="gpt-4o-mini",
+            system_prompt_generator=system_prompt_generator,
+            memory=AgentMemory(),  # Fresh memory
+            input_schema=BaseIOSchema,
+            output_schema=ImageSearchResult
+        )
+    )
+
+def create_ceo_photo_agent(client, ticker: str):
+    """Create a fresh CEO photo search agent for specific company."""
+    system_prompt_generator = SystemPromptGenerator(
+        background=[
+            f"You are finding {ticker} CEO photo specifically.",
+            "You are an image search specialist who finds executive photos.",
+            f"You know the best methods for finding {ticker}'s CEO headshot.",
+            f"You prioritize official, professional {ticker} CEO photos from reliable sources."
+        ],
+        steps=[
+            f"Analyze the search requirements for {ticker} CEO photo",
+            f"Determine the best search strategy for {ticker} CEO (Wikipedia, company website, news sources)",
+            f"For {ticker} CEO: try Wikipedia first with CEO name and company context",
+            f"For {ticker} CEO: search company's official website leadership/about pages",
+            f"For {ticker} CEO: check LinkedIn, news articles, and press releases",
+            f"Provide multiple {ticker} CEO photo URL options ranked by likely quality"
+        ],
+        output_instructions=[
+            f"Focus specifically on {ticker} CEO photos only",
+            "Provide direct image URLs when possible",
+            "Order URLs by likely image quality and professionalism",
+            "Include confidence score based on search method reliability",
+            f"Be realistic about what {ticker} CEO images are publicly available",
+            "Consider image licensing and usage rights"
+        ]
+    )
+    
+    return BaseAgent(
+        config=BaseAgentConfig(
+            client=client,
+            model="gpt-4o-mini",
+            system_prompt_generator=system_prompt_generator,
+            memory=AgentMemory(),  # Fresh memory
+            input_schema=BaseIOSchema,
+            output_schema=ImageSearchResult
+        )
+    )
+
+
+# ===== HELPER FUNCTIONS for image processing =====
+def generate_fallback_logo(ticker: str) -> str:
+    """Generate fallback logo URL."""
+    colors = ['3b82f6', '10b981', 'f59e0b', 'ef4444', '8b5cf6', '06b6d4']
+    color = colors[hash(ticker) % len(colors)]
+    return f"https://ui-avatars.com/api/?name={ticker}&size=128&background={color}&color=ffffff&bold=true"
+
+def generate_fallback_ceo(ceo_name: str) -> str:
+    """Generate fallback CEO photo URL."""
+    return f"https://ui-avatars.com/api/?name={ceo_name.replace(' ', '+')}&size=128&background=6366f1&color=ffffff&bold=true"
+
+
 # ===== ORCHESTRATOR CLASS =====
 
 class AnalysisOrchestrator:
@@ -435,7 +593,6 @@ class AnalysisOrchestrator:
     
     def __init__(self, openai_client):
         self.openai_client = openai_client
-        # Don't initialize agents here - create fresh ones for each analysis
     
     async def run_full_analysis(self, ticker: str) -> Dict[str, Any]:
         """Run complete analysis workflow with fresh agents to prevent memory contamination."""
@@ -452,6 +609,9 @@ class AnalysisOrchestrator:
         management_agent = create_management_agent(self.openai_client, ticker)
         industry_agent = create_industry_agent(self.openai_client, ticker)
         decision_agent = create_decision_agent(self.openai_client, ticker)
+        company_info_agent = create_company_info_agent(self.openai_client, ticker)
+        logo_search_agent = create_logo_search_agent(self.openai_client, ticker)
+        ceo_photo_agent = create_ceo_photo_agent(self.openai_client, ticker)
         
         # Step 1: Check existing knowledge
         print(f"🔍 Checking knowledge for {ticker}...")
@@ -465,25 +625,88 @@ class AnalysisOrchestrator:
         print(f"🧮 Calculating financial ratios...")
         key_ratios = ratio_agent.run(financial_data.dict())
         
-        # Step 4: Run parallel analysis (can run simultaneously)
-        print(f"🔬 Running parallel analysis...")
-        business_task = asyncio.create_task(
-            asyncio.to_thread(business_agent.run, {"ticker": ticker})
-        )
-        risk_task = asyncio.create_task(
-            asyncio.to_thread(risk_agent.run, {"ticker": ticker})
-        )
-        management_task = asyncio.create_task(
-            asyncio.to_thread(management_agent.run, {"ticker": ticker})
-        )
-        industry_task = asyncio.create_task(
-            asyncio.to_thread(industry_agent.run, {"ticker": ticker})
-        )
-        
-        # Wait for parallel tasks to complete
-        business_analysis, risk_assessment, management_analysis, industry_analysis = await asyncio.gather(
-            business_task, risk_task, management_task, industry_task
-        )
+        # Step 4: Get company images (can run in parallel with other tasks)
+        print(f"🖼️ Retrieving company images for {ticker}...")
+        company_images = None
+        try:
+            # Get company information first
+            company_info_task = asyncio.create_task(
+                asyncio.to_thread(company_info_agent.run, {"ticker": ticker})
+            )
+            
+            # Run parallel analysis including company info
+            business_task = asyncio.create_task(
+                asyncio.to_thread(business_agent.run, {"ticker": ticker})
+            )
+            risk_task = asyncio.create_task(
+                asyncio.to_thread(risk_agent.run, {"ticker": ticker})
+            )
+            management_task = asyncio.create_task(
+                asyncio.to_thread(management_agent.run, {"ticker": ticker})
+            )
+            industry_task = asyncio.create_task(
+                asyncio.to_thread(industry_agent.run, {"ticker": ticker})
+            )
+            
+            # Wait for company info and other parallel tasks
+            company_info, business_analysis, risk_assessment, management_analysis, industry_analysis = await asyncio.gather(
+                company_info_task, business_task, risk_task, management_task, industry_task
+            )
+            
+            # Now search for images using company info
+            logo_search_task = asyncio.create_task(
+                asyncio.to_thread(logo_search_agent.run, {
+                    "search_query": f"{company_info.company_name} official logo {company_info.logo_description}",
+                    "image_type": "logo",
+                    "context": f"Website: {company_info.website_domain}"
+                })
+            )
+            
+            ceo_photo_task = None
+            if company_info.ceo_name:
+                ceo_photo_task = asyncio.create_task(
+                    asyncio.to_thread(ceo_photo_agent.run, {
+                        "search_query": f"{company_info.ceo_name} CEO {company_info.company_name}",
+                        "image_type": "person",
+                        "context": company_info.ceo_description or ""
+                    })
+                )
+            
+            # Wait for image searches
+            if ceo_photo_task:
+                logo_search, ceo_search = await asyncio.gather(logo_search_task, ceo_photo_task)
+                ceo_photo_urls = ceo_search.image_urls
+            else:
+                logo_search = await logo_search_task
+                ceo_photo_urls = []
+            
+            # Combine results
+            logo_urls = [
+                f"https://logo.clearbit.com/{company_info.website_domain}",
+                *logo_search.image_urls
+            ]
+            
+            fallback_logo = generate_fallback_logo(ticker)
+            fallback_ceo = generate_fallback_ceo(company_info.ceo_name) if company_info.ceo_name else None
+            
+            company_images = CompanyImages(
+                ticker=ticker.upper(),
+                logo_urls=logo_urls,
+                ceo_photo_urls=ceo_photo_urls,
+                fallback_logo_url=fallback_logo,
+                fallback_ceo_url=fallback_ceo,
+                company_info=company_info.dict()
+            )
+            
+        except Exception as e:
+            print(f"⚠️ Image retrieval failed for {ticker}: {e}")
+            # Create minimal fallback
+            company_images = CompanyImages(
+                ticker=ticker.upper(),
+                logo_urls=[f"https://logo.clearbit.com/{ticker.lower()}.com"],
+                ceo_photo_urls=[],
+                fallback_logo_url=generate_fallback_logo(ticker)
+            )
         
         # Step 5: Valuation analysis (depends on financial data)
         print(f"💰 Calculating valuation metrics...")
@@ -518,5 +741,6 @@ class AnalysisOrchestrator:
             "management_analysis": management_analysis.dict(),
             "industry_analysis": industry_analysis.dict(),
             "final_recommendation": final_recommendation.dict(),
+            "company_images": company_images.dict(),
             "analysis_timestamp": datetime.now().isoformat()
         }

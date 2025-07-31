@@ -21,7 +21,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenWatchlist }) => {
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
               <TrendingUp className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl text-gray-900">FinAnalyzer</span>
+            <span className="font-bold text-xl text-gray-900">fundamentals</span>
           </button>
 
           {/* Watchlist Button */}
