@@ -8,6 +8,7 @@ from atomic_agents.agents.base_agent import BaseIOSchema, BaseAgent, BaseAgentCo
 from atomic_agents.lib.components.system_prompt_generator import SystemPromptGenerator
 from atomic_agents.lib.components.agent_memory import AgentMemory
 from pydantic import Field
+from backend.app.services.logo_service import LogoDevService
 
 # ===== ALL SCHEMAS =====
 
@@ -261,7 +262,7 @@ def create_business_agent(client, ticker: str):
         ],
         output_instructions=[
             f"CRITICAL: All output must have ticker field set to '{ticker}'",
-            f"Analyze {ticker} specifically, not Apple, Google, or any other company",
+            f"Analyze {ticker} specifically, not any other company",
             "Be specific about products/services, not generic",
             "Focus on sustainable competitive advantages"
         ]
@@ -296,7 +297,7 @@ def create_risk_agent(client, ticker: str):
         ],
         output_instructions=[
             f"CRITICAL: All output must have ticker field set to '{ticker}'",
-            f"Analyze {ticker} specifically, not Apple or any other company",
+            f"Analyze {ticker} specifically, not any other company",
             "Use 1-10 scale where 1 = very low risk, 10 = very high risk",
             "Be objective and evidence-based in risk assessment"
             "Your risk summary should be few paragraphs long. It should go into enough high-level details."
@@ -368,7 +369,7 @@ def create_management_agent(client, ticker: str):
         ],
         output_instructions=[
             f"CRITICAL: All output must have ticker field set to '{ticker}'",
-            f"Analyze {ticker}'s management specifically, not Tim Cook or Apple",
+            f"Analyze {ticker}'s management specifically.",
             "Use 1-10 scale for management quality and governance scores",
             "Focus on factual track record, not speculation",
             "Provide some factual detailed justification in the form of examples of what the management has done, and what impact on the company that has led to"
@@ -440,7 +441,7 @@ def create_decision_agent(client, ticker: str):
         ],
         output_instructions=[
             f"CRITICAL: All output must have ticker field set to '{ticker}'",
-            f"Recommend on {ticker} specifically, not Chipotle, Tesla, or any other company",
+            f"Recommend on {ticker} specifically, not any other company",
             "Use BUY for undervalued, high-quality companies",
             "Use SELL for overvalued or deteriorating companies",
             "Use HOLD for fairly valued or uncertain situations"
@@ -498,7 +499,7 @@ def create_company_info_agent(client, ticker: str):
     )
 
 def create_logo_search_agent(client, ticker: str):
-    """Create a fresh logo search agent for specific company."""
+    """Create a fresh logo search agent for a specific company."""
     system_prompt_generator = SystemPromptGenerator(
         background=[
             f"You are finding {ticker} company logo specifically.",
@@ -508,22 +509,22 @@ def create_logo_search_agent(client, ticker: str):
         ],
         steps=[
             f"Analyze the search requirements for {ticker} logo",
-            f"Determine the best search strategy for {ticker} logo (Clearbit API, company website, brand assets)",
-            f"For {ticker}: try Clearbit logo API first with company domain",
-            f"For {ticker}: search company's official website for brand assets",
-            f"For {ticker}: check brand guidelines pages and press kits",
-            f"Provide multiple {ticker} logo URL options ranked by likely quality"
+            # Removed Clearbit, now explicit about Logo.dev
+            f"Use Logo.dev API format: https://img.logo.dev/domain.com",
+            f"For {ticker}: construct Logo.dev URL with company domain and size parameters",
+            f"For {ticker}: use the Logo.dev Brand Search API if the domain is unknown",
+            f"Provide multiple {ticker} logo URL options ranked by likely quality",
         ],
         output_instructions=[
             f"Focus specifically on {ticker} logos only",
             "Provide direct image URLs when possible",
             "Order URLs by likely image quality and relevance",
             "Include confidence score based on search method reliability",
-            "Prefer Clearbit API format: https://logo.clearbit.com/domain.com",
-            f"Be realistic about what {ticker} images are publicly available"
+            # Prefer Logo.dev format rather than Clearbit
+            "Prefer Logo.dev API format: https://img.logo.dev/domain.com?size=128",
+            f"Be realistic about what {ticker} images are publicly available",
         ]
     )
-    
     return BaseAgent(
         config=BaseAgentConfig(
             client=client,
@@ -534,6 +535,7 @@ def create_logo_search_agent(client, ticker: str):
             output_schema=ImageSearchResult
         )
     )
+
 
 def create_ceo_photo_agent(client, ticker: str):
     """Create a fresh CEO photo search agent for specific company."""
@@ -575,11 +577,11 @@ def create_ceo_photo_agent(client, ticker: str):
 
 
 # ===== HELPER FUNCTIONS for image processing =====
-def generate_fallback_logo(ticker: str) -> str:
-    """Generate fallback logo URL."""
-    colors = ['3b82f6', '10b981', 'f59e0b', 'ef4444', '8b5cf6', '06b6d4']
-    color = colors[hash(ticker) % len(colors)]
-    return f"https://ui-avatars.com/api/?name={ticker}&size=128&background={color}&color=ffffff&bold=true"
+# def generate_fallback_logo(ticker: str) -> str:
+#     """Generate fallback logo URL."""
+#     colors = ['3b82f6', '10b981', 'f59e0b', 'ef4444', '8b5cf6', '06b6d4']
+#     color = colors[hash(ticker) % len(colors)]
+#     return f"https://ui-avatars.com/api/?name={ticker}&size=128&background={color}&color=ffffff&bold=true"
 
 def generate_fallback_ceo(ceo_name: str) -> str:
     """Generate fallback CEO photo URL."""
@@ -610,7 +612,7 @@ class AnalysisOrchestrator:
         industry_agent = create_industry_agent(self.openai_client, ticker)
         decision_agent = create_decision_agent(self.openai_client, ticker)
         company_info_agent = create_company_info_agent(self.openai_client, ticker)
-        logo_search_agent = create_logo_search_agent(self.openai_client, ticker)
+        # logo_search_agent = create_logo_search_agent(self.openai_client, ticker)
         ceo_photo_agent = create_ceo_photo_agent(self.openai_client, ticker)
         
         # Step 1: Check existing knowledge
@@ -654,13 +656,13 @@ class AnalysisOrchestrator:
             )
             
             # Now search for images using company info
-            logo_search_task = asyncio.create_task(
-                asyncio.to_thread(logo_search_agent.run, {
-                    "search_query": f"{company_info.company_name} official logo {company_info.logo_description}",
-                    "image_type": "logo",
-                    "context": f"Website: {company_info.website_domain}"
-                })
-            )
+            # logo_search_task = asyncio.create_task(
+            #     asyncio.to_thread(logo_search_agent.run, {
+            #         "search_query": f"{company_info.company_name} official logo {company_info.logo_description}",
+            #         "image_type": "logo",
+            #         "context": f"Website: {company_info.website_domain}"
+            #     })
+            # )
             
             ceo_photo_task = None
             if company_info.ceo_name:
@@ -673,26 +675,33 @@ class AnalysisOrchestrator:
                 )
             
             # Wait for image searches
-            if ceo_photo_task:
-                logo_search, ceo_search = await asyncio.gather(logo_search_task, ceo_photo_task)
-                ceo_photo_urls = ceo_search.image_urls
-            else:
-                logo_search = await logo_search_task
-                ceo_photo_urls = []
+            # if ceo_photo_task:
+            #     logo_search, ceo_search = await asyncio.gather(logo_search_task, ceo_photo_task)
+            #     ceo_photo_urls = ceo_search.image_urls
+            # else:
+            #     logo_search = await logo_search_task
+            #     ceo_photo_urls = []
+
+            # After running the logo search agent
+            # search_urls = [
+            #     url for url in logo_search.image_urls
+            #     if (company_info.website_domain in url) and ("token=" in url)
+            # ]
             
             # Combine results
             logo_urls = [
-                f"https://logo.clearbit.com/{company_info.website_domain}",
-                *logo_search.image_urls
+                LogoDevService.get_ticker_logo_url(ticker, size=64),
+                LogoDevService.get_ticker_logo_url(ticker, size=128),
+                LogoDevService.get_ticker_logo_url(ticker, size=256),
             ]
             
-            fallback_logo = generate_fallback_logo(ticker)
+            fallback_logo = logo_urls[1]  # or logo_urls[0]
             fallback_ceo = generate_fallback_ceo(company_info.ceo_name) if company_info.ceo_name else None
             
             company_images = CompanyImages(
                 ticker=ticker.upper(),
                 logo_urls=logo_urls,
-                ceo_photo_urls=ceo_photo_urls,
+                # ceo_photo_urls=ceo_photo_urls,
                 fallback_logo_url=fallback_logo,
                 fallback_ceo_url=fallback_ceo,
                 company_info=company_info.dict()
@@ -703,9 +712,10 @@ class AnalysisOrchestrator:
             # Create minimal fallback
             company_images = CompanyImages(
                 ticker=ticker.upper(),
-                logo_urls=[f"https://logo.clearbit.com/{ticker.lower()}.com"],
+                fallback_logo = LogoDevService.get_ticker_logo_url(ticker, size=128),
+                logo_urls = [LogoDevService.get_ticker_logo_url(ticker, size=64),LogoDevService.get_ticker_logo_url(ticker, size=128),LogoDevService.get_ticker_logo_url(ticker, size=256)],
                 ceo_photo_urls=[],
-                fallback_logo_url=generate_fallback_logo(ticker)
+                fallback_logo_url=LogoDevService.get_logo_url(f"{ticker.lower()}.com", size=128),
             )
         
         # Step 5: Valuation analysis (depends on financial data)

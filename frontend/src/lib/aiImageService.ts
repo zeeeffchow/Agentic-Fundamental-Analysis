@@ -2,40 +2,70 @@
 import type { CompanyImages } from '../types/images';
 
 export class AIImageService {
-  /**
-   * Get company logo from AI-retrieved data with smart fallbacks
-   */
+  private static LOGODEV_API_KEY = import.meta.env.VITE_LOGODEV_API_KEY;
   static async getBestLogo(
     ticker: string,
     companyImages?: CompanyImages | null
-  ): Promise<string> {
-    // If we have AI-retrieved logo URLs, try them in order
-    if (companyImages?.logo_urls?.length) {
-      for (const logoUrl of companyImages.logo_urls) {
-        try {
-          const isValid = await this.validateImageUrl(logoUrl);
-          if (isValid) {
-            console.log(`✅ Using AI logo URL: ${logoUrl}`);
-            return logoUrl;
-          }
-        } catch (error) {
-          console.warn(`❌ Logo URL failed: ${logoUrl}`, error);
-          continue; // Try next URL
+    ): Promise<string> {
+        if (companyImages?.logo_urls?.length) {
+            // Sort URLs: ones with the API token first
+            const urlsToTry = [...companyImages.logo_urls].sort((a, b) => {
+            const aHasToken = a.includes('token=');
+            const bHasToken = b.includes('token=');
+            if (aHasToken && !bHasToken) return -1;
+            if (!aHasToken && bHasToken) return 1;
+            return 0;
+            });
+
+            for (const logoUrl of urlsToTry) {
+            try {
+                const isValid = await this.validateImageUrl(logoUrl);
+                if (isValid) {
+                console.log(`✅ Using Logo.dev URL: ${logoUrl}`);
+                return logoUrl;
+                }
+            } catch {
+                continue;
+            }
+            }
+
+            // Fall back to AI-provided fallback if nothing works
+            if (companyImages.fallback_logo_url) {
+                return companyImages.fallback_logo_url;
+            }
         }
-      }
-      
-      // If all AI URLs fail, use AI-provided fallback
-      if (companyImages.fallback_logo_url) {
-        console.log(`⚠️ Using AI fallback logo: ${companyImages.fallback_logo_url}`);
-        return companyImages.fallback_logo_url;
-      }
+
+        // Final fallback
+        return this.generateFallbackLogo(ticker);
     }
 
-    // Final fallback
-    const finalFallback = this.generateFallbackLogo(ticker);
-    console.log(`🔄 Using generated fallback logo: ${finalFallback}`);
-    return finalFallback;
-  }
+    private static generateLogoDevUrl(
+        domain: string,
+        size: number = 128,
+        format: string = "png"
+        ): string {
+        let url = `https://img.logo.dev/${domain}`;
+        const params: string[] = [];
+
+        // Only append the token if it exists
+        if (this.LOGODEV_API_KEY) {
+            params.push(`token=${this.LOGODEV_API_KEY}`);
+        }
+
+        // Always specify size; Logo.dev defaults to 128 px:contentReference[oaicite:0]{index=0}, but it’s explicit here
+        params.push(`size=${size}`);
+
+        if (format && format !== "png") {
+            params.push(`format=${format}`);
+        }
+
+        if (params.length > 0) {
+            url += "?" + params.join("&");
+        }
+
+        return url;
+    }
+
 
   /**
    * Get CEO photo from AI-retrieved data with smart fallbacks
@@ -105,12 +135,10 @@ export class AIImageService {
   /**
    * Generate fallback logo
    */
-  static generateFallbackLogo(ticker: string, size: number = 128): string {
-    const colors = ['3b82f6', '10b981', 'f59e0b', 'ef4444', '8b5cf6', '06b6d4'];
-    const color = colors[this.hashString(ticker) % colors.length];
-    return `https://ui-avatars.com/api/?name=${ticker}&size=${size}&background=${color}&color=ffffff&bold=true`;
-  }
-
+    static generateFallbackLogo(ticker: string, size: number = 128): string {
+        // Use the dedicated ticker endpoint instead of treating the ticker as a domain
+        return this.generateLogoDevUrl(`ticker/${ticker.toLowerCase()}`, size);
+    }
   /**
    * Generate CEO fallback photo
    */
@@ -118,15 +146,7 @@ export class AIImageService {
     return `https://ui-avatars.com/api/?name=${encodeURIComponent(ceoName)}&size=${size}&background=6366f1&color=ffffff&bold=true`;
   }
 
-  private static hashString(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash);
-  }
+
 }
 
 // Re-export the type for backwards compatibility

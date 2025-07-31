@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     
     # OpenAI - optional for migrations
     OPENAI_API_KEY: Optional[str] = None
+
+    # Logo.dev API keys (add these lines)
+    LOGODEV_API_KEY: Optional[str] = None  # public token for logo images
+    LOGODEV_SECRET_KEY: Optional[str] = None  # secret key for brand search
     
     # App settings
     SECRET_KEY: str = "your-secret-key-change-this-in-production"
