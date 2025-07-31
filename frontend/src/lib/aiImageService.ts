@@ -1,21 +1,5 @@
-export interface CompanyImages {
-  ticker: string;
-  logo_urls: string[];
-  ceo_photo_urls: string[];
-  fallback_logo_url: string;
-  fallback_ceo_url?: string;
-  company_info?: {
-    ticker: string;
-    company_name: string;
-    website_domain: string;
-    logo_description: string;
-    ceo_name?: string;
-    ceo_description?: string;
-    founded_year?: number;
-    headquarters?: string;
-    industry_sector?: string;
-  };
-}
+// frontend/src/lib/aiImageService.ts
+import type { CompanyImages } from '../types/images';
 
 export class AIImageService {
   /**
@@ -144,3 +128,6 @@ export class AIImageService {
     return Math.abs(hash);
   }
 }
+
+// Re-export the type for backwards compatibility
+export type { CompanyImages };

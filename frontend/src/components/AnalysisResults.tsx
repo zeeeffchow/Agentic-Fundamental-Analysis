@@ -11,12 +11,13 @@ import {
   BarChart3,
   Target
 } from 'lucide-react';
-import { analysisApi, type AnalysisResponse } from '../lib/api';
+import { analysisApi } from '../lib/api';
+import type { CompanyImages, AnalysisResponse } from '../types/images';
 import { cn } from '../lib/utils';
 import { WatchlistButton } from './WatchlistButton';
 import { TopBar } from './TopBar';
 import { Sidebar } from './Sidebar';
-import { AIImageService, type CompanyImages } from '../lib/aiImageService';
+import { AIImageService } from '../lib/aiImageService';
 import { useImageLoader } from '../hooks/useImageLoader';
 
 export const AnalysisResults: React.FC = () => {
@@ -286,7 +287,7 @@ export const AnalysisResults: React.FC = () => {
           {activeTab === 'management' && (
             <ManagementAnalysis 
               analysis={analysis} 
-              companyImages={companyImages || undefined} 
+              companyImages={companyImages} 
             />
           )}
         </div>
