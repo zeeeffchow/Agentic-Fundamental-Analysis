@@ -9,7 +9,28 @@ import {
   Shield,
   Users,
   BarChart3,
-  Target
+  Target,
+  AlertTriangle,
+  Star,
+  Award, 
+  Calendar,
+  Zap,
+  Lightbulb,
+  PieChart,
+  Calculator,
+  Activity,
+  CreditCard,
+  Coins,
+  Globe,
+  Map,
+  Briefcase,
+  Crown,
+  Scale,
+  Eye,
+  AlertCircle,
+  CheckCircle,
+  XCircle,
+  Clock
 } from 'lucide-react';
 import { analysisApi } from '../lib/api';
 import type { CompanyImages, AnalysisResponse } from '../types/images';
@@ -306,100 +327,339 @@ export const AnalysisResults: React.FC = () => {
 
 const OverviewTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
   const finalRec = analysis.analysis_data?.final_recommendation || {};
+  const financialData = analysis.analysis_data?.financial_data || {};
+  const businessData = analysis.analysis_data?.business_analysis || {};
+  const valuationData = analysis.analysis_data?.valuation_metrics || {};
   
+  const getRecommendationColor = (recommendation: string) => {
+    switch (recommendation?.toUpperCase()) {
+      case 'STRONG BUY': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+      case 'BUY': return 'text-green-700 bg-green-50 border-green-200';
+      case 'SELL': return 'text-red-700 bg-red-50 border-red-200';
+      case 'STRONG SELL': return 'text-red-800 bg-red-100 border-red-300';
+      default: return 'text-amber-700 bg-amber-50 border-amber-200';
+    }
+  };
+
+  const getRecommendationIcon = (recommendation: string) => {
+    switch (recommendation?.toUpperCase()) {
+      case 'STRONG BUY': return <TrendingUp className="h-6 w-6" />;
+      case 'BUY': return <TrendingUp className="h-5 w-5" />;
+      case 'SELL': return <TrendingDown className="h-5 w-5" />;
+      case 'STRONG SELL': return <TrendingDown className="h-6 w-6" />;
+      default: return <Target className="h-5 w-5" />;
+    }
+  };
+
+  const getConvictionBadge = (conviction: string) => {
+    const colors = {
+      'High': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+      'Medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      'Low': 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+    return colors[conviction as keyof typeof colors] || colors.Medium;
+  };
+
   return (
-    <div className="grid lg:grid-cols-3 gap-8">
-      {/* Main Recommendation Card */}
-      <div className="lg:col-span-2">
+    <div className="space-y-8">
+      {/* Hero Recommendation Section */}
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="grid lg:grid-cols-3 gap-8 items-center">
+          {/* Main Recommendation */}
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                {getRecommendationIcon(finalRec.recommendation || analysis.recommendation)}
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold mb-2">
+                  {finalRec.recommendation || analysis.recommendation}
+                </h1>
+                <div className="flex items-center gap-4">
+                  {finalRec.conviction_level && (
+                    <span className="px-3 py-1 rounded-full text-sm font-semibold bg-white/20 text-white border border-white/30">
+                      {finalRec.conviction_level} Conviction
+                    </span>
+                  )}
+                  <span className="text-blue-100">
+                    Confidence: {Math.round((finalRec.confidence || analysis.confidence_score || 0) * 100)}%
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Investment Thesis Preview */}
+            {finalRec.investment_thesis && (
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <h3 className="font-semibold mb-3 flex items-center gap-2">
+                  <Lightbulb className="h-5 w-5" />
+                  Investment Thesis
+                </h3>
+                <p className="text-blue-50 leading-relaxed">
+                  {finalRec.investment_thesis.length > 300 
+                    ? finalRec.investment_thesis.substring(0, 300) + '...' 
+                    : finalRec.investment_thesis}
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Price Targets */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
+            <h3 className="font-semibold mb-4 flex items-center gap-2">
+              <Target className="h-5 w-5" />
+              Price Targets
+            </h3>
+            
+            {finalRec.price_target_range ? (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-blue-100">Bull Case</span>
+                  <span className="font-bold text-xl text-green-300">
+                    ${finalRec.price_target_range.bull?.toFixed(2) || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-blue-100">Base Case</span>
+                  <span className="font-bold text-xl">
+                    ${finalRec.price_target_range.base?.toFixed(2) || 'N/A'}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-blue-100">Bear Case</span>
+                  <span className="font-bold text-xl text-red-300">
+                    ${finalRec.price_target_range.bear?.toFixed(2) || 'N/A'}
+                  </span>
+                </div>
+                
+                {/* Current Price vs Base Target */}
+                {valuationData.current_price && finalRec.price_target_range.base && (
+                  <div className="mt-4 pt-4 border-t border-white/20">
+                    <div className="flex justify-between items-center">
+                      <span className="text-blue-100">Current Price</span>
+                      <span className="font-bold">${valuationData.current_price.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-blue-100">Potential Upside</span>
+                      <span className={`font-bold ${
+                        ((finalRec.price_target_range.base - valuationData.current_price) / valuationData.current_price * 100) > 0 
+                          ? 'text-green-300' : 'text-red-300'
+                      }`}>
+                        {(((finalRec.price_target_range.base - valuationData.current_price) / valuationData.current_price) * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-3xl font-bold mb-2">
+                  ${(finalRec.target_price || analysis.target_price || 0).toFixed(2)}
+                </div>
+                <div className="text-blue-100 text-sm">12-Month Target</div>
+              </div>
+            )}
+            
+            {finalRec.time_horizon && (
+              <div className="mt-4 pt-4 border-t border-white/20">
+                <div className="flex items-center gap-2 text-blue-100">
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm">{finalRec.time_horizon}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Key Metrics Grid */}
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Overall Score */}
+        {(finalRec.overall_score || analysis.overall_score) && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 p-6 text-center hover:shadow-xl transition-all duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Award className="h-6 w-6 text-blue-600" />
+            </div>
+            <div className="text-3xl font-bold text-blue-600 mb-1">
+              {(finalRec.overall_score || analysis.overall_score || 0).toFixed(1)}/10
+            </div>
+            <div className="text-sm font-medium text-gray-600">Overall Score</div>
+          </div>
+        )}
+
+        {/* Quality Score */}
+        {finalRec.quality_score && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 p-6 text-center hover:shadow-xl transition-all duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Star className="h-6 w-6 text-emerald-600" />
+            </div>
+            <div className="text-3xl font-bold text-emerald-600 mb-1">
+              {finalRec.quality_score.toFixed(1)}/10
+            </div>
+            <div className="text-sm font-medium text-gray-600">Quality Score</div>
+          </div>
+        )}
+
+        {/* Growth Score */}
+        {finalRec.growth_score && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 p-6 text-center hover:shadow-xl transition-all duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="h-6 w-6 text-green-600" />
+            </div>
+            <div className="text-3xl font-bold text-green-600 mb-1">
+              {finalRec.growth_score.toFixed(1)}/10
+            </div>
+            <div className="text-sm font-medium text-gray-600">Growth Score</div>
+          </div>
+        )}
+
+        {/* Valuation Score */}
+        {finalRec.valuation_score && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/50 p-6 text-center hover:shadow-xl transition-all duration-300">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <DollarSign className="h-6 w-6 text-purple-600" />
+            </div>
+            <div className="text-3xl font-bold text-purple-600 mb-1">
+              {finalRec.valuation_score.toFixed(1)}/10
+            </div>
+            <div className="text-sm font-medium text-gray-600">Valuation Score</div>
+          </div>
+        )}
+      </div>
+
+      {/* Key Reasons and Catalysts */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Investment Reasons */}
+        {finalRec.key_reasons && finalRec.key_reasons.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+            <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                <Zap className="h-5 w-5 text-green-600" />
+              </div>
+              Key Investment Reasons
+            </h3>
+            <div className="space-y-4">
+              {finalRec.key_reasons.slice(0, 3).map((reason: any, index: number) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-lg border border-green-200/30">
+                  <h4 className="font-semibold text-green-800 mb-2">
+                    {typeof reason === 'object' ? reason.reason : reason}
+                  </h4>
+                  {typeof reason === 'object' && reason.explanation && (
+                    <p className="text-green-700 text-sm">{reason.explanation}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Investment Catalysts */}
+        {finalRec.catalysts && finalRec.catalysts.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+            <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                <Lightbulb className="h-5 w-5 text-blue-600" />
+              </div>
+              Key Catalysts
+            </h3>
+            <div className="space-y-4">
+              {finalRec.catalysts.slice(0, 3).map((catalyst: any, index: number) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-lg border border-blue-200/30">
+                  <h4 className="font-semibold text-blue-800 mb-2">
+                    {typeof catalyst === 'object' ? catalyst.catalyst : catalyst}
+                  </h4>
+                  {typeof catalyst === 'object' && catalyst.impact && (
+                    <p className="text-blue-700 text-sm">{catalyst.impact}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Risk Assessment */}
+      {finalRec.risks && finalRec.risks.length > 0 && (
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900">Investment Recommendation</h2>
-          
-          {/* Enhanced Metrics Grid */}
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50">
-              <div className="text-3xl font-bold text-blue-600 mb-2">{analysis.recommendation}</div>
-              <div className="text-sm font-medium text-blue-700">Recommendation</div>
+          <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-red-100 to-red-200 rounded-lg flex items-center justify-center">
+              <AlertTriangle className="h-5 w-5 text-red-600" />
             </div>
-            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50">
-              <div className="text-3xl font-bold text-green-600 mb-2">{(analysis.confidence_score * 100).toFixed(0)}%</div>
-              <div className="text-sm font-medium text-green-700">Confidence</div>
-            </div>
-            <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200/50">
-              <div className="text-3xl font-bold text-indigo-600 mb-2">{analysis.overall_score.toFixed(1)}/10</div>
-              <div className="text-sm font-medium text-indigo-700">Overall Score</div>
-            </div>
+            Key Risks to Consider
+          </h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {finalRec.risks.slice(0, 4).map((risk: any, index: number) => (
+              <div key={index} className="p-4 bg-gradient-to-r from-red-50 to-pink-50/30 rounded-lg border border-red-200/30">
+                <h4 className="font-semibold text-red-800 mb-2">
+                  {typeof risk === 'object' ? risk.risk : risk}
+                </h4>
+                {typeof risk === 'object' && risk.explanation && (
+                  <p className="text-red-700 text-sm">{risk.explanation}</p>
+                )}
+              </div>
+            ))}
           </div>
-          
-          {/* Analysis Summary */}
-          {finalRec.analysis_summary && (
-            <div className="mb-6 p-6 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl border border-gray-200/50">
-              <h3 className="font-semibold mb-3 text-gray-900">Analysis Summary</h3>
-              <p className="text-gray-700 leading-relaxed">{finalRec.analysis_summary}</p>
-            </div>
-          )}
-
-          {/* Key Reasons */}
-          {finalRec.key_reasons && (
-            <div className="p-6 bg-gradient-to-br from-white to-blue-50/20 rounded-xl border border-blue-200/30">
-              <h3 className="font-semibold mb-4 text-gray-900">Key Reasons</h3>
-              <ul className="space-y-3">
-                {finalRec.key_reasons.map((reason: string, index: number) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <div className="w-2.5 h-2.5 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
-                    <span className="text-gray-700 leading-relaxed">{reason}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
-      {/* Key Metrics Sidebar */}
-      <div className="space-y-6">
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 hover:shadow-xl transition-all duration-300">
-          <h3 className="font-semibold mb-6 text-gray-900 text-lg">Key Metrics</h3>
-          <div className="space-y-4">
-            {analysis.target_price && (
-              <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-lg border border-green-200/30">
-                <span className="text-gray-700 font-medium">Target Price</span>
-                <span className="font-bold text-green-600 text-lg">${analysis.target_price.toFixed(2)}</span>
+      {/* Business Highlights */}
+      {businessData.moat_strength && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h3 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-lg flex items-center justify-center">
+              <Shield className="h-5 w-5 text-indigo-600" />
+            </div>
+            Business Highlights
+          </h3>
+          <div className="grid md:grid-cols-3 gap-6">
+            {businessData.moat_strength && (
+              <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50/30 rounded-lg border border-indigo-200/30">
+                <div className="text-2xl font-bold text-indigo-600 mb-2">
+                  {businessData.moat_strength}
+                </div>
+                <div className="text-sm font-medium text-indigo-700">Economic Moat</div>
               </div>
             )}
-            <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-lg border border-blue-200/30">
-              <span className="text-gray-700 font-medium">Analysis Date</span>
-              <span className="font-semibold text-blue-600">
-                {new Date(analysis.analysis_date).toLocaleDateString()}
-              </span>
-            </div>
-            {analysis.company.sector && (
-              <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-lg border border-purple-200/30">
-                <span className="text-gray-700 font-medium">Sector</span>
-                <span className="font-semibold text-purple-600">{analysis.company.sector}</span>
+            {businessData.market_share && (
+              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/30 rounded-lg border border-blue-200/30">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  {businessData.market_share.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-blue-700">Market Share</div>
+              </div>
+            )}
+            {businessData.brand_strength && (
+              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100/30 rounded-lg border border-green-200/30">
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  {businessData.brand_strength}/10
+                </div>
+                <div className="text-sm font-medium text-green-700">Brand Strength</div>
               </div>
             )}
           </div>
         </div>
+      )}
 
-        {/* Quick Stats Card */}
-        <div className="bg-gradient-to-br from-indigo-500 to-blue-600 rounded-2xl shadow-lg p-6 text-white">
-          <h3 className="font-semibold mb-4 text-white/90">Quick Stats</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-blue-100">Market Cap</span>
-              <span className="font-bold">$2.1T</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-blue-100">P/E Ratio</span>
-              <span className="font-bold">28.5</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-blue-100">Dividend Yield</span>
-              <span className="font-bold">0.52%</span>
-            </div>
+      {/* Portfolio Guidance */}
+      {(finalRec.portfolio_fit || finalRec.position_sizing) && (
+        <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
+          <h3 className="text-xl font-bold mb-6 text-gray-900">Portfolio Guidance</h3>
+          <div className="grid md:grid-cols-2 gap-6">
+            {finalRec.portfolio_fit && (
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Portfolio Fit</h4>
+                <p className="text-gray-700">{finalRec.portfolio_fit}</p>
+              </div>
+            )}
+            {finalRec.position_sizing && (
+              <div>
+                <h4 className="font-semibold text-gray-800 mb-2">Position Sizing</h4>
+                <p className="text-gray-700">{finalRec.position_sizing}</p>
+              </div>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
@@ -408,101 +668,508 @@ const FinancialTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
   const financialData = analysis.analysis_data?.financial_data || {};
   const keyRatios = analysis.analysis_data?.key_ratios || {};
 
-  return (
-    <div className="grid lg:grid-cols-2 gap-8">
-      {/* Financial Data Card - COMPLETE with all fields */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-          </div>
-          Financial Data
-        </h2>
-        
-        <div className="space-y-4">
-          {financialData.revenue && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Revenue</span>
-              <span className="font-bold text-blue-600 text-lg">${financialData.revenue.toLocaleString()}M</span>
-            </div>
-          )}
-          {financialData.net_income && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Net Income</span>
-              <span className="font-bold text-green-600 text-lg">${financialData.net_income.toLocaleString()}M</span>
-            </div>
-          )}
-          {financialData.free_cash_flow && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Free Cash Flow</span>
-              <span className="font-bold text-purple-600 text-lg">${financialData.free_cash_flow.toLocaleString()}M</span>
-            </div>
-          )}
-          {/* ADDED: Missing fields from schema */}
-          {financialData.total_equity && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-indigo-50 to-blue-50/30 rounded-xl border border-indigo-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Total Equity</span>
-              <span className="font-bold text-indigo-600 text-lg">${financialData.total_equity.toLocaleString()}M</span>
-            </div>
-          )}
-          {financialData.total_debt && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-red-50 to-rose-50/30 rounded-xl border border-red-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Total Debt</span>
-              <span className="font-bold text-red-600 text-lg">${financialData.total_debt.toLocaleString()}M</span>
-            </div>
-          )}
-          {financialData.shares_outstanding && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-amber-50 to-orange-50/30 rounded-xl border border-amber-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Shares Outstanding</span>
-              <span className="font-bold text-amber-600 text-lg">{financialData.shares_outstanding.toLocaleString()}M</span>
-            </div>
-          )}
-        </div>
-      </div>
+  // Helper function to format large numbers
+  const formatNumber = (num: number) => {
+    if (num >= 1000) {
+      return `${(num / 1000).toFixed(1)}B`;
+    }
+    return `${num.toLocaleString()}M`;
+  };
 
-      {/* Key Ratios Card - COMPLETE with all fields */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-emerald-100 to-green-200 rounded-xl flex items-center justify-center">
-            <TrendingUp className="h-5 w-5 text-green-600" />
+  // Helper function to get trend color
+  const getTrendColor = (value: number, threshold: number = 0) => {
+    if (value > threshold) return 'text-green-600';
+    if (value < threshold) return 'text-red-600';
+    return 'text-gray-600';
+  };
+
+  const getTrendIcon = (value: number, threshold: number = 0) => {
+    if (value > threshold) return <TrendingUp className="h-4 w-4 text-green-600" />;
+    if (value < threshold) return <TrendingDown className="h-4 w-4 text-red-600" />;
+    return <Activity className="h-4 w-4 text-gray-600" />;
+  };
+
+  return (
+    <div className="space-y-8">
+      {/* Revenue Growth Analysis */}
+      {(financialData.revenue || financialData.revenue_growth_1y) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-blue-600" />
+            </div>
+            Revenue Growth Analysis
+          </h2>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Current Revenue */}
+            {financialData.revenue && (
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-3xl font-bold text-blue-600 mb-2">
+                  ${formatNumber(financialData.revenue)}
+                </div>
+                <div className="text-sm font-medium text-blue-700">Annual Revenue</div>
+              </div>
+            )}
+
+            {/* 1-Year Growth */}
+            {financialData.revenue_growth_1y && (
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className={`text-3xl font-bold mb-2 flex items-center justify-center gap-2 ${getTrendColor(financialData.revenue_growth_1y)}`}>
+                  {getTrendIcon(financialData.revenue_growth_1y)}
+                  {financialData.revenue_growth_1y.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-green-700">1-Year Growth</div>
+              </div>
+            )}
+
+            {/* 3-Year Growth */}
+            {financialData.revenue_growth_3y && (
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
+                <div className={`text-3xl font-bold mb-2 flex items-center justify-center gap-2 ${getTrendColor(financialData.revenue_growth_3y)}`}>
+                  {getTrendIcon(financialData.revenue_growth_3y)}
+                  {financialData.revenue_growth_3y.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-purple-700">3-Year CAGR</div>
+              </div>
+            )}
+
+            {/* 5-Year Growth */}
+            {financialData.revenue_growth_5y && (
+              <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200/50 hover:shadow-md transition-all duration-200">
+                <div className={`text-3xl font-bold mb-2 flex items-center justify-center gap-2 ${getTrendColor(financialData.revenue_growth_5y)}`}>
+                  {getTrendIcon(financialData.revenue_growth_5y)}
+                  {financialData.revenue_growth_5y.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-indigo-700">5-Year CAGR</div>
+              </div>
+            )}
           </div>
-          Key Ratios
-        </h2>
-        
-        <div className="space-y-4">
-          {keyRatios.roe && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Return on Equity</span>
-              <span className="font-bold text-green-600 text-lg">{keyRatios.roe.toFixed(1)}%</span>
-            </div>
-          )}
-          {keyRatios.net_margin && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Net Margin</span>
-              <span className="font-bold text-blue-600 text-lg">{keyRatios.net_margin.toFixed(1)}%</span>
-            </div>
-          )}
-          {keyRatios.debt_to_equity && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-amber-50 to-orange-50/30 rounded-xl border border-amber-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Debt to Equity</span>
-              <span className="font-bold text-amber-600 text-lg">{keyRatios.debt_to_equity.toFixed(2)}</span>
-            </div>
-          )}
-          {keyRatios.current_ratio && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">Current Ratio</span>
-              <span className="font-bold text-purple-600 text-lg">{keyRatios.current_ratio.toFixed(2)}</span>
-            </div>
-          )}
-          {/* ADDED: Missing field from schema */}
-          {keyRatios.revenue_growth_3y && (
-            <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-teal-50 to-cyan-50/30 rounded-xl border border-teal-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">3-Year Revenue Growth</span>
-              <span className="font-bold text-teal-600 text-lg">{keyRatios.revenue_growth_3y.toFixed(1)}%</span>
+
+          {/* Quarterly Revenue Trend */}
+          {financialData.quarterly_revenue_trend && financialData.quarterly_revenue_trend.length > 0 && (
+            <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-xl border border-gray-200/30">
+              <h3 className="font-bold text-lg text-gray-900 mb-4">Quarterly Revenue Trend</h3>
+              <div className="grid grid-cols-4 gap-4">
+                {financialData.quarterly_revenue_trend.map((revenue: number, index: number) => (
+                  <div key={index} className="text-center p-3 bg-white rounded-lg border border-gray-200">
+                    <div className="text-lg font-bold text-gray-800">
+                      ${formatNumber(revenue)}
+                    </div>
+                    <div className="text-xs text-gray-600">Q{index + 1}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {/* Profitability Analysis */}
+      {(financialData.gross_margin || financialData.operating_margin || financialData.net_margin) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+              <PieChart className="h-6 w-6 text-emerald-600" />
+            </div>
+            Profitability Analysis
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Margin Metrics */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">Profit Margins</h3>
+              
+              {financialData.gross_margin && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-emerald-50 to-green-50/30 rounded-xl border border-emerald-200/30">
+                  <span className="text-gray-700 font-medium">Gross Margin</span>
+                  <span className="font-bold text-emerald-600 text-lg">{financialData.gross_margin.toFixed(1)}%</span>
+                </div>
+              )}
+
+              {financialData.operating_margin && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+                  <span className="text-gray-700 font-medium">Operating Margin</span>
+                  <span className="font-bold text-blue-600 text-lg">{financialData.operating_margin.toFixed(1)}%</span>
+                </div>
+              )}
+
+              {financialData.net_margin && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30">
+                  <span className="text-gray-700 font-medium">Net Margin</span>
+                  <span className="font-bold text-purple-600 text-lg">{financialData.net_margin.toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+
+            {/* Absolute Profit Numbers */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">Profit Amounts</h3>
+              
+              {financialData.gross_profit && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-emerald-50 to-green-50/30 rounded-xl border border-emerald-200/30">
+                  <span className="text-gray-700 font-medium">Gross Profit</span>
+                  <span className="font-bold text-emerald-600 text-lg">${formatNumber(financialData.gross_profit)}</span>
+                </div>
+              )}
+
+              {financialData.operating_income && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+                  <span className="text-gray-700 font-medium">Operating Income</span>
+                  <span className="font-bold text-blue-600 text-lg">${formatNumber(financialData.operating_income)}</span>
+                </div>
+              )}
+
+              {financialData.net_income && (
+                <div className="flex justify-between items-center py-4 px-5 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30">
+                  <span className="text-gray-700 font-medium">Net Income</span>
+                  <span className="font-bold text-purple-600 text-lg">${formatNumber(financialData.net_income)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cash Flow Analysis */}
+      {(financialData.operating_cash_flow || financialData.free_cash_flow || financialData.fcf_margin) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center">
+              <Activity className="h-6 w-6 text-cyan-600" />
+            </div>
+            Cash Flow Analysis
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {financialData.operating_cash_flow && (
+              <div className="text-center p-6 bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-xl border border-cyan-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-cyan-600 mb-2">
+                  ${formatNumber(financialData.operating_cash_flow)}
+                </div>
+                <div className="text-sm font-medium text-cyan-700">Operating Cash Flow</div>
+              </div>
+            )}
+
+            {financialData.free_cash_flow && (
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  ${formatNumber(financialData.free_cash_flow)}
+                </div>
+                <div className="text-sm font-medium text-green-700">Free Cash Flow</div>
+              </div>
+            )}
+
+            {financialData.fcf_margin && (
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  {financialData.fcf_margin.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-purple-700">FCF Margin</div>
+              </div>
+            )}
+
+            {financialData.fcf_growth_3y && (
+              <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200/50 hover:shadow-md transition-all duration-200">
+                <div className={`text-2xl font-bold mb-2 flex items-center justify-center gap-2 ${getTrendColor(financialData.fcf_growth_3y)}`}>
+                  {getTrendIcon(financialData.fcf_growth_3y)}
+                  {financialData.fcf_growth_3y.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-indigo-700">3Y FCF Growth</div>
+              </div>
+            )}
+          </div>
+
+          {financialData.capex && (
+            <div className="mt-6 p-6 bg-gradient-to-r from-orange-50 to-red-50/30 rounded-xl border border-orange-200/30">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-700 font-medium">Capital Expenditures</span>
+                <span className="font-bold text-orange-600 text-lg">${formatNumber(financialData.capex)}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Balance Sheet Strength */}
+      {(financialData.total_assets || financialData.total_equity || financialData.cash_and_equivalents) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl flex items-center justify-center">
+              <CreditCard className="h-6 w-6 text-slate-600" />
+            </div>
+            Balance Sheet Strength
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {financialData.total_assets && (
+              <div className="text-center p-6 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-xl border border-slate-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-slate-600 mb-2">
+                  ${formatNumber(financialData.total_assets)}
+                </div>
+                <div className="text-sm font-medium text-slate-700">Total Assets</div>
+              </div>
+            )}
+
+            {financialData.total_equity && (
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-green-600 mb-2">
+                  ${formatNumber(financialData.total_equity)}
+                </div>
+                <div className="text-sm font-medium text-green-700">Shareholders' Equity</div>
+              </div>
+            )}
+
+            {financialData.total_debt && (
+              <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl border border-red-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-red-600 mb-2">
+                  ${formatNumber(financialData.total_debt)}
+                </div>
+                <div className="text-sm font-medium text-red-700">Total Debt</div>
+              </div>
+            )}
+
+            {financialData.cash_and_equivalents && (
+              <div className="text-center p-6 bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-xl border border-cyan-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-cyan-600 mb-2">
+                  ${formatNumber(financialData.cash_and_equivalents)}
+                </div>
+                <div className="text-sm font-medium text-cyan-700">Cash & Equivalents</div>
+              </div>
+            )}
+
+            {financialData.working_capital && (
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  ${formatNumber(financialData.working_capital)}
+                </div>
+                <div className="text-sm font-medium text-blue-700">Working Capital</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Key Ratios */}
+      {Object.keys(keyRatios).length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+              <Calculator className="h-6 w-6 text-amber-600" />
+            </div>
+            Key Financial Ratios
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Profitability Ratios */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                <Target className="h-5 w-5 text-green-600" />
+                Profitability Ratios
+              </h3>
+              
+              {keyRatios.roe && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-lg border border-green-200/30">
+                  <span className="text-gray-700 font-medium">ROE</span>
+                  <span className="font-bold text-green-600">{keyRatios.roe.toFixed(1)}%</span>
+                </div>
+              )}
+
+              {keyRatios.roa && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-lg border border-blue-200/30">
+                  <span className="text-gray-700 font-medium">ROA</span>
+                  <span className="font-bold text-blue-600">{keyRatios.roa.toFixed(1)}%</span>
+                </div>
+              )}
+
+              {keyRatios.roic && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-lg border border-purple-200/30">
+                  <span className="text-gray-700 font-medium">ROIC</span>
+                  <span className="font-bold text-purple-600">{keyRatios.roic.toFixed(1)}%</span>
+                </div>
+              )}
+            </div>
+
+            {/* Liquidity Ratios */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                <Coins className="h-5 w-5 text-blue-600" />
+                Liquidity Ratios
+              </h3>
+              
+              {keyRatios.current_ratio && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-lg border border-blue-200/30">
+                  <span className="text-gray-700 font-medium">Current Ratio</span>
+                  <span className="font-bold text-blue-600">{keyRatios.current_ratio.toFixed(2)}</span>
+                </div>
+              )}
+
+              {keyRatios.quick_ratio && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-cyan-50 to-teal-50/30 rounded-lg border border-cyan-200/30">
+                  <span className="text-gray-700 font-medium">Quick Ratio</span>
+                  <span className="font-bold text-cyan-600">{keyRatios.quick_ratio.toFixed(2)}</span>
+                </div>
+              )}
+
+              {keyRatios.cash_ratio && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-teal-50 to-green-50/30 rounded-lg border border-teal-200/30">
+                  <span className="text-gray-700 font-medium">Cash Ratio</span>
+                  <span className="font-bold text-teal-600">{keyRatios.cash_ratio.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Leverage Ratios */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-red-600" />
+                Leverage Ratios
+              </h3>
+              
+              {keyRatios.debt_to_equity && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-red-50 to-pink-50/30 rounded-lg border border-red-200/30">
+                  <span className="text-gray-700 font-medium">Debt/Equity</span>
+                  <span className="font-bold text-red-600">{keyRatios.debt_to_equity.toFixed(2)}</span>
+                </div>
+              )}
+
+              {keyRatios.debt_to_assets && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-orange-50 to-red-50/30 rounded-lg border border-orange-200/30">
+                  <span className="text-gray-700 font-medium">Debt/Assets</span>
+                  <span className="font-bold text-orange-600">{keyRatios.debt_to_assets.toFixed(2)}</span>
+                </div>
+              )}
+
+              {keyRatios.interest_coverage && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-yellow-50 to-orange-50/30 rounded-lg border border-yellow-200/30">
+                  <span className="text-gray-700 font-medium">Interest Coverage</span>
+                  <span className="font-bold text-yellow-600">{keyRatios.interest_coverage.toFixed(1)}x</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Shareholder Returns */}
+      {(financialData.dividend_yield || financialData.share_buybacks_annual) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-emerald-600" />
+            </div>
+            Shareholder Returns
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {financialData.dividend_yield && (
+              <div className="text-center p-6 bg-gradient-to-br from-emerald-50 to-emerald-100/50 rounded-xl border border-emerald-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-emerald-600 mb-2">
+                  {financialData.dividend_yield.toFixed(2)}%
+                </div>
+                <div className="text-sm font-medium text-emerald-700">Dividend Yield</div>
+              </div>
+            )}
+
+            {financialData.dividend_growth_rate && (
+              <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+                <div className={`text-2xl font-bold mb-2 flex items-center justify-center gap-2 ${getTrendColor(financialData.dividend_growth_rate)}`}>
+                  {getTrendIcon(financialData.dividend_growth_rate)}
+                  {financialData.dividend_growth_rate.toFixed(1)}%
+                </div>
+                <div className="text-sm font-medium text-green-700">Dividend Growth</div>
+              </div>
+            )}
+
+            {financialData.share_buybacks_annual && (
+              <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-blue-600 mb-2">
+                  ${formatNumber(financialData.share_buybacks_annual)}
+                </div>
+                <div className="text-sm font-medium text-blue-700">Annual Buybacks</div>
+              </div>
+            )}
+
+            {financialData.shares_outstanding && (
+              <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
+                <div className="text-2xl font-bold text-purple-600 mb-2">
+                  {financialData.shares_outstanding.toFixed(1)}M
+                </div>
+                <div className="text-sm font-medium text-purple-700">Shares Outstanding</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Industry Comparisons */}
+      {(keyRatios.roe_vs_industry || keyRatios.margins_vs_industry || keyRatios.growth_vs_industry) && (
+        <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+              <BarChart3 className="h-6 w-6 text-indigo-600" />
+            </div>
+            Industry Comparison
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {keyRatios.roe_vs_industry && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-2">ROE vs Industry</h4>
+                <p className="text-gray-700">{keyRatios.roe_vs_industry}</p>
+              </div>
+            )}
+
+            {keyRatios.margins_vs_industry && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-2">Margins vs Industry</h4>
+                <p className="text-gray-700">{keyRatios.margins_vs_industry}</p>
+              </div>
+            )}
+
+            {keyRatios.growth_vs_industry && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-2">Growth vs Industry</h4>
+                <p className="text-gray-700">{keyRatios.growth_vs_industry}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Financial Quality Assessment */}
+      {(keyRatios.revenue_growth_consistency || keyRatios.earnings_growth_quality) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+              <Target className="h-6 w-6 text-green-600" />
+            </div>
+            Financial Quality Assessment
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {keyRatios.revenue_growth_consistency && (
+              <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
+                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  Revenue Growth Quality
+                </h4>
+                <p className="text-green-700">{keyRatios.revenue_growth_consistency}</p>
+              </div>
+            )}
+
+            {keyRatios.earnings_growth_quality && (
+              <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <Activity className="h-5 w-5" />
+                  Earnings Growth Quality
+                </h4>
+                <p className="text-blue-700">{keyRatios.earnings_growth_quality}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -510,88 +1177,413 @@ const FinancialTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
 const BusinessTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
   const businessData = analysis.analysis_data?.business_analysis || {};
 
+  // Helper function to get moat color
+  const getMoatColor = (strength: string) => {
+    switch (strength?.toLowerCase()) {
+      case 'wide': return 'text-green-600 bg-green-50 border-green-200';
+      case 'narrow': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      case 'none': return 'text-red-600 bg-red-50 border-red-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getMoatIcon = (strength: string) => {
+    switch (strength?.toLowerCase()) {
+      case 'wide': return <Shield className="h-6 w-6 text-green-600" />;
+      case 'narrow': return <Shield className="h-6 w-6 text-yellow-600" />;
+      case 'none': return <Shield className="h-6 w-6 text-red-600" />;
+      default: return <Shield className="h-6 w-6 text-gray-600" />;
+    }
+  };
+
   return (
     <div className="space-y-8">
+      {/* Business Model Overview */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-bold mb-8 text-gray-900 flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-green-200 rounded-xl flex items-center justify-center">
-            <Building className="h-6 w-6 text-green-600" />
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+            <Building className="h-6 w-6 text-emerald-600" />
           </div>
-          Business Analysis
+          Business Model Overview
         </h2>
-        
-        {/* ADDED: Market Position - was missing */}
-        {businessData.market_position && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-indigo-50 to-purple-50/30 rounded-xl border border-indigo-200/30">
-            <h3 className="font-bold mb-3 text-lg text-gray-900">Market Position</h3>
-            <p className="text-gray-700 leading-relaxed font-medium">{businessData.market_position}</p>
-          </div>
-        )}
 
-        {/* Products & Services */}
-        {businessData.products_services && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30">
-            <h3 className="font-bold mb-4 text-lg text-gray-900">Products & Services</h3>
-            <div className="flex flex-wrap gap-3">
-              {businessData.products_services.map((item: string, index: number) => (
-                <span 
-                  key={index} 
-                  className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                >
-                  {item}
-                </span>
-              ))}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Business Model Type */}
+          {businessData.business_model_type && (
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Briefcase className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="text-lg font-bold text-blue-600 mb-1 capitalize">
+                {businessData.business_model_type}
+              </div>
+              <div className="text-sm font-medium text-blue-700">Business Model</div>
             </div>
+          )}
+
+          {/* Market Share */}
+          {businessData.market_share && (
+            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <PieChart className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="text-2xl font-bold text-purple-600 mb-1">
+                {businessData.market_share.toFixed(1)}%
+              </div>
+              <div className="text-sm font-medium text-purple-700">Market Share</div>
+            </div>
+          )}
+
+          {/* Market Position */}
+          {businessData.market_position && (
+            <div className="text-center p-6 bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl border border-indigo-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Crown className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div className="text-sm font-bold text-indigo-600 mb-1">
+                {businessData.market_position}
+              </div>
+              <div className="text-sm font-medium text-indigo-700">Market Position</div>
+            </div>
+          )}
+
+          {/* Brand Strength */}
+          {businessData.brand_strength && (
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Award className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="text-2xl font-bold text-green-600 mb-1">
+                {businessData.brand_strength}/10
+              </div>
+              <div className="text-sm font-medium text-green-700">Brand Strength</div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Revenue Stream Analysis */}
+      {businessData.revenue_streams && businessData.revenue_streams.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-xl flex items-center justify-center">
+              <PieChart className="h-6 w-6 text-cyan-600" />
+            </div>
+            Revenue Stream Analysis
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            {/* Revenue Streams List */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">Revenue Breakdown</h3>
+              {businessData.revenue_streams.map((stream: any, index: number) => {
+                const colors = [
+                  'from-blue-50 to-blue-100/50 border-blue-200/50 text-blue-600',
+                  'from-green-50 to-green-100/50 border-green-200/50 text-green-600', 
+                  'from-purple-50 to-purple-100/50 border-purple-200/50 text-purple-600',
+                  'from-orange-50 to-orange-100/50 border-orange-200/50 text-orange-600',
+                  'from-pink-50 to-pink-100/50 border-pink-200/50 text-pink-600'
+                ];
+                const colorClass = colors[index % colors.length];
+
+                return (
+                  <div key={index} className={`p-4 bg-gradient-to-r rounded-xl border ${colorClass.split(' ').slice(0, 3).join(' ')}`}>
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className={`font-semibold ${colorClass.split(' ')[3]}`}>
+                        {stream.name || stream}
+                      </h4>
+                      <span className={`text-xl font-bold ${colorClass.split(' ')[3]}`}>
+                        {stream.percentage}%
+                      </span>
+                    </div>
+                    {stream.description && (
+                      <p className={`text-sm ${colorClass.split(' ')[3].replace('600', '700')}`}>
+                        {stream.description}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Visual Revenue Chart Representation */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-lg text-gray-800 mb-4">Visual Distribution</h3>
+              <div className="space-y-3">
+                {businessData.revenue_streams.map((stream: any, index: number) => {
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-orange-500', 'bg-pink-500'];
+                  const colorClass = colors[index % colors.length];
+                  const percentage = stream.percentage || 0;
+
+                  return (
+                    <div key={index} className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-gray-700">
+                          {stream.name || stream}
+                        </span>
+                        <span className="text-sm font-bold text-gray-800">
+                          {percentage}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-3">
+                        <div 
+                          className={`h-3 rounded-full ${colorClass} transition-all duration-1000 ease-out`}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Geographic Exposure */}
+      {businessData.geographic_exposure && Object.keys(businessData.geographic_exposure).length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+              <Globe className="h-6 w-6 text-indigo-600" />
+            </div>
+            Geographic Revenue Distribution
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {Object.entries(businessData.geographic_exposure).map(([region, percentage]: [string, any], index: number) => {
+              const colors = [
+                'from-blue-50 to-blue-100/50 border-blue-200/50 text-blue-600',
+                'from-green-50 to-green-100/50 border-green-200/50 text-green-600',
+                'from-purple-50 to-purple-100/50 border-purple-200/50 text-purple-600',
+                'from-orange-50 to-orange-100/50 border-orange-200/50 text-orange-600'
+              ];
+              const colorClass = colors[index % colors.length];
+
+              return (
+                <div key={region} className={`text-center p-6 bg-gradient-to-br rounded-xl border hover:shadow-md transition-all duration-200 ${colorClass.split(' ').slice(0, 3).join(' ')}`}>
+                  <div className="w-10 h-10 bg-white/50 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <Map className={`h-5 w-5 ${colorClass.split(' ')[3]}`} />
+                  </div>
+                  <div className={`text-2xl font-bold mb-1 ${colorClass.split(' ')[3]}`}>
+                    {percentage}%
+                  </div>
+                  <div className={`text-sm font-medium ${colorClass.split(' ')[3].replace('600', '700')}`}>
+                    {region}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Competitive Analysis */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Economic Moat */}
+        {businessData.moat_strength && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+            <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                <Shield className="h-5 w-5 text-green-600" />
+              </div>
+              Economic Moat
+            </h2>
+
+            <div className={`text-center p-6 bg-gradient-to-br rounded-xl border mb-6 ${getMoatColor(businessData.moat_strength)}`}>
+              <div className="flex items-center justify-center mb-3">
+                {getMoatIcon(businessData.moat_strength)}
+              </div>
+              <div className="text-2xl font-bold mb-2">
+                {businessData.moat_strength} Moat
+              </div>
+              <div className="text-sm font-medium opacity-80">
+                Competitive Protection
+              </div>
+            </div>
+
+            {/* Moat Sources */}
+            {businessData.moat_sources && businessData.moat_sources.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="font-semibold text-gray-800">Moat Sources:</h4>
+                {businessData.moat_sources.map((source: string, index: number) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200/30">
+                    <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0"></div>
+                    <span className="text-green-800 font-medium">{source}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
         {/* Competitive Advantages */}
-        {businessData.competitive_advantages && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
-            <h3 className="font-bold mb-4 text-lg text-gray-900">Competitive Advantages</h3>
-            <ul className="space-y-3">
-              {businessData.competitive_advantages.map((advantage: string, index: number) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="w-3 h-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
-                  <span className="text-gray-700 leading-relaxed font-medium">{advantage}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {businessData.competitive_advantages && businessData.competitive_advantages.length > 0 && (
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+            <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-blue-200 rounded-lg flex items-center justify-center">
+                <Zap className="h-5 w-5 text-blue-600" />
+              </div>
+              Competitive Advantages
+            </h2>
 
-        {/* ADDED: Growth Drivers - was missing */}
-        {businessData.growth_drivers && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-teal-50 to-cyan-50/30 rounded-xl border border-teal-200/30">
-            <h3 className="font-bold mb-4 text-lg text-gray-900">Growth Drivers</h3>
-            <ul className="space-y-3">
-              {businessData.growth_drivers.map((driver: string, index: number) => (
-                <li key={index} className="flex items-start gap-3">
-                  <div className="w-3 h-3 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-full mt-2 flex-shrink-0 shadow-sm"></div>
-                  <span className="text-gray-700 leading-relaxed font-medium">{driver}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Key Competitors */}
-        {businessData.key_competitors && (
-          <div className="p-6 bg-gradient-to-r from-gray-50 to-slate-50/30 rounded-xl border border-gray-200/30">
-            <h3 className="font-bold mb-4 text-lg text-gray-900">Key Competitors</h3>
-            <div className="flex flex-wrap gap-3">
-              {businessData.key_competitors.map((competitor: string, index: number) => (
-                <span 
-                  key={index} 
-                  className="bg-gradient-to-r from-gray-600 to-slate-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105"
-                >
-                  {competitor}
-                </span>
+            <div className="space-y-4">
+              {businessData.competitive_advantages.map((advantage: any, index: number) => (
+                <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30 hover:shadow-md transition-all duration-200">
+                  <h4 className="font-semibold text-blue-800 mb-2">
+                    {typeof advantage === 'object' ? advantage.advantage : advantage}
+                  </h4>
+                  {typeof advantage === 'object' && advantage.explanation && (
+                    <p className="text-blue-700 text-sm leading-relaxed">
+                      {advantage.explanation}
+                    </p>
+                  )}
+                </div>
               ))}
             </div>
           </div>
         )}
       </div>
+
+      {/* Growth Strategy */}
+      {businessData.growth_drivers && businessData.growth_drivers.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-emerald-600" />
+            </div>
+            Growth Strategy & Drivers
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {businessData.growth_drivers.map((driver: any, index: number) => (
+              <div key={index} className="p-6 bg-gradient-to-r from-emerald-50 to-green-50/30 rounded-xl border border-emerald-200/30 hover:shadow-md transition-all duration-200">
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <TrendingUp className="h-4 w-4 text-emerald-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-emerald-800 mb-2">
+                      {typeof driver === 'object' ? driver.driver : driver}
+                    </h4>
+                    {typeof driver === 'object' && driver.explanation && (
+                      <p className="text-emerald-700 text-sm leading-relaxed">
+                        {driver.explanation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Expansion Plans */}
+          {businessData.expansion_plans && businessData.expansion_plans.length > 0 && (
+            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+              <h3 className="font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                <Target className="h-5 w-5" />
+                Expansion Plans
+              </h3>
+              <div className="grid md:grid-cols-2 gap-3">
+                {businessData.expansion_plans.map((plan: string, index: number) => (
+                  <div key={index} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-blue-200">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                    <span className="text-blue-800 font-medium">{plan}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Competitive Landscape */}
+      {businessData.key_competitors && businessData.key_competitors.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
+              <Users className="h-6 w-6 text-red-600" />
+            </div>
+            Competitive Landscape
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {businessData.key_competitors.map((competitor: any, index: number) => (
+              <div key={index} className="p-4 bg-gradient-to-r from-red-50 to-pink-50/30 rounded-xl border border-red-200/30 hover:shadow-md transition-all duration-200 text-center">
+                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Users className="h-5 w-5 text-red-600" />
+                </div>
+                <h4 className="font-semibold text-red-800 mb-2">
+                  {typeof competitor === 'object' ? competitor.name : competitor}
+                </h4>
+                {typeof competitor === 'object' && competitor.market_share && (
+                  <div className="text-red-600 font-bold text-lg">
+                    {competitor.market_share}% Share
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Customer & Market Information */}
+      {(businessData.customer_segments || businessData.customer_loyalty || businessData.pricing_power) && (
+        <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+              <Target className="h-6 w-6 text-purple-600" />
+            </div>
+            Customer & Market Dynamics
+          </h2>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Customer Segments */}
+            {businessData.customer_segments && businessData.customer_segments.length > 0 && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-purple-600" />
+                  Customer Segments
+                </h4>
+                <div className="space-y-2">
+                  {businessData.customer_segments.map((segment: string, index: number) => (
+                    <div key={index} className="p-2 bg-purple-50 rounded-lg border border-purple-200">
+                      <span className="text-purple-800 font-medium">{segment}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Customer Loyalty */}
+            {businessData.customer_loyalty && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Award className="h-5 w-5 text-green-600" />
+                  Customer Loyalty
+                </h4>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-green-600 mb-2">
+                    {businessData.customer_loyalty}
+                  </div>
+                  <div className="text-sm text-green-700">Loyalty Level</div>
+                </div>
+              </div>
+            )}
+
+            {/* Pricing Power */}
+            {businessData.pricing_power && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200">
+                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Crown className="h-5 w-5 text-indigo-600" />
+                  Pricing Power
+                </h4>
+                <p className="text-indigo-700">{businessData.pricing_power}</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -599,6 +1591,7 @@ const BusinessTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => 
 const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
   const riskData = analysis.analysis_data?.risk_assessment || {};
 
+  // Helper functions for risk visualization
   const getRiskColor = (score: number) => {
     if (score <= 3) return 'from-green-500 to-emerald-500';
     if (score <= 6) return 'from-amber-500 to-orange-500';
@@ -611,76 +1604,374 @@ const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
     return 'from-red-50 to-rose-50/30 border-red-200/30';
   };
 
-  const riskCategories = [
-    { key: 'concentration_risk', label: 'Concentration Risk', icon: Target },
-    { key: 'competition_risk', label: 'Competition Risk', icon: Users },
-    { key: 'disruption_risk', label: 'Disruption Risk', icon: TrendingUp },
-    { key: 'regulatory_risk', label: 'Regulatory Risk', icon: Shield },
+  const getRiskTextColor = (score: number) => {
+    if (score <= 3) return 'text-green-800';
+    if (score <= 6) return 'text-amber-800';
+    return 'text-red-800';
+  };
+
+  const getRiskLevel = (score: number) => {
+    if (score <= 3) return { level: 'Low Risk', icon: CheckCircle, color: 'text-green-600' };
+    if (score <= 6) return { level: 'Medium Risk', icon: AlertCircle, color: 'text-amber-600' };
+    return { level: 'High Risk', icon: XCircle, color: 'text-red-600' };
+  };
+
+  const getRiskIcon = (category: string) => {
+    switch (category) {
+      case 'concentration': return Target;
+      case 'competition': return Users;
+      case 'disruption': return Zap;
+      case 'regulatory': return Shield;
+      case 'cyclical': return Activity;
+      case 'leverage': return Scale;
+      case 'liquidity': return TrendingDown;
+      default: return AlertTriangle;
+    }
+  };
+
+  // Enhanced risk categories with detailed information
+  const enhancedRiskCategories = [
+    {
+      key: 'concentration_risk',
+      label: 'Concentration Risk',
+      description: 'Customer and revenue concentration vulnerability',
+      detailsKey: 'concentration_details',
+      icon: Target,
+      category: 'Business Risk'
+    },
+    {
+      key: 'competition_risk', 
+      label: 'Competition Risk',
+      description: 'Competitive pressure and market share threats',
+      detailsKey: 'competition_details',
+      icon: Users,
+      category: 'Business Risk'
+    },
+    {
+      key: 'disruption_risk',
+      label: 'Disruption Risk', 
+      description: 'Technology and business model disruption threats',
+      detailsKey: 'disruption_details',
+      icon: Zap,
+      category: 'Technology Risk'
+    },
+    {
+      key: 'regulatory_risk',
+      label: 'Regulatory Risk',
+      description: 'Government policy and compliance challenges',
+      detailsKey: 'regulatory_details', 
+      icon: Shield,
+      category: 'External Risk'
+    },
+    {
+      key: 'cyclical_risk',
+      label: 'Cyclical Risk',
+      description: 'Economic cycle sensitivity and volatility',
+      detailsKey: 'cyclical_details',
+      icon: Activity,
+      category: 'Economic Risk'
+    },
+    {
+      key: 'leverage_risk',
+      label: 'Leverage Risk',
+      description: 'Financial leverage and debt sustainability',
+      detailsKey: '',
+      icon: Scale,
+      category: 'Financial Risk'
+    },
+    {
+      key: 'liquidity_risk',
+      label: 'Liquidity Risk',
+      description: 'Cash flow and funding availability',
+      detailsKey: '',
+      icon: TrendingDown,
+      category: 'Financial Risk'
+    }
   ];
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-      <h2 className="text-2xl font-bold mb-8 text-gray-900 flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-rose-200 rounded-xl flex items-center justify-center">
-          <Shield className="h-6 w-6 text-red-600" />
+    <div className="space-y-8">
+      {/* Overall Risk Assessment Header */}
+      {riskData.overall_risk_score && (
+        <div className="bg-gradient-to-r from-slate-600 via-gray-600 to-slate-700 rounded-3xl shadow-2xl p-8 text-white">
+          <div className="grid lg:grid-cols-3 gap-8 items-center">
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`p-4 rounded-2xl bg-white/20 backdrop-blur-sm`}>
+                  <AlertTriangle className="h-8 w-8" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">Risk Assessment</h1>
+                  <div className="flex items-center gap-4">
+                    <span className="text-slate-100">
+                      Overall Risk Level: {getRiskLevel(riskData.overall_risk_score).level}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {riskData.risk_summary && (
+                <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                  <h3 className="font-semibold mb-3 flex items-center gap-2">
+                    <Eye className="h-5 w-5" />
+                    Risk Summary
+                  </h3>
+                  <p className="text-slate-50 leading-relaxed">
+                    {riskData.risk_summary}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Overall Risk Score Gauge */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
+              <h3 className="font-semibold mb-4">Overall Risk Score</h3>
+              <div className="relative w-32 h-32 mx-auto mb-4">
+                {/* Risk Gauge Background */}
+                <div className="absolute inset-0 rounded-full border-8 border-white/20"></div>
+                {/* Risk Gauge Fill */}
+                <div 
+                  className={`absolute inset-0 rounded-full border-8 border-transparent`}
+                  style={{
+                    background: `conic-gradient(${
+                      riskData.overall_risk_score <= 3 ? '#10b981' :
+                      riskData.overall_risk_score <= 6 ? '#f59e0b' : '#ef4444'
+                    } ${(riskData.overall_risk_score / 10) * 360}deg, transparent ${(riskData.overall_risk_score / 10) * 360}deg)`,
+                    borderRadius: '50%'
+                  }}
+                />
+                <div className="absolute inset-4 bg-slate-600 rounded-full flex items-center justify-center">
+                  <span className="text-2xl font-bold">{riskData.overall_risk_score.toFixed(1)}</span>
+                </div>
+              </div>
+              <div className="text-sm text-slate-200">Out of 10.0</div>
+            </div>
+          </div>
         </div>
-        Risk Assessment
-      </h2>
-      
+      )}
+
       {/* Risk Categories Grid */}
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
-        {riskCategories.map((category) => {
-          const score = riskData[category.key];
-          if (!score) return null;
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {enhancedRiskCategories.map((category) => {
+          const score = riskData[category.key as keyof typeof riskData] as number;
+          if (!score && score !== 0) return null;
           
           const Icon = category.icon;
+          const riskLevel = getRiskLevel(score);
+          const RiskIcon = riskLevel.icon;
           
           return (
             <div 
-              key={category.key} 
-              className={`p-6 bg-gradient-to-r ${getRiskBgColor(score)} rounded-xl border hover:shadow-md transition-all duration-200`}
+              key={category.key}
+              className={`bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-6 hover:shadow-xl transition-all duration-300`}
             >
-              <div className="flex justify-between items-center mb-4">
+              {/* Risk Category Header */}
+              <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <Icon className="h-5 w-5 text-gray-600" />
-                  <span className="font-semibold text-gray-900">{category.label}</span>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getRiskBgColor(score).split('border-')[0]} ${getRiskBgColor(score).split('border-')[1]}`}>
+                    <Icon className={`h-5 w-5 ${getRiskTextColor(score)}`} />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900">{category.label}</h3>
+                    <div className="text-xs text-gray-500 uppercase tracking-wide">{category.category}</div>
+                  </div>
                 </div>
-                <span className="text-2xl font-bold text-gray-900">{score}/10</span>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-gray-900">{score}/10</div>
+                  <div className={`flex items-center gap-1 text-xs ${riskLevel.color}`}>
+                    <RiskIcon className="h-3 w-3" />
+                    {riskLevel.level}
+                  </div>
+                </div>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div 
-                  className={`h-3 rounded-full bg-gradient-to-r ${getRiskColor(score)} transition-all duration-500 ease-out`}
-                  style={{ width: `${(score / 10) * 100}%` }}
-                ></div>
+
+              {/* Risk Score Bar */}
+              <div className="mb-4">
+                <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+                  <div 
+                    className={`h-3 rounded-full bg-gradient-to-r ${getRiskColor(score)} transition-all duration-1000 ease-out`}
+                    style={{ width: `${(score / 10) * 100}%` }}
+                  />
+                </div>
               </div>
+
+              {/* Risk Description */}
+              <p className="text-sm text-gray-600 mb-4">{category.description}</p>
+
+              {/* Detailed Risk Analysis */}
+              {category.detailsKey && riskData[category.detailsKey as keyof typeof riskData] && (
+                <div className={`p-3 bg-gradient-to-r ${getRiskBgColor(score)} rounded-lg border`}>
+                  <p className={`text-sm ${getRiskTextColor(score)} leading-relaxed`}>
+                    {riskData[category.detailsKey as keyof typeof riskData] as string}
+                  </p>
+                </div>
+              )}
             </div>
           );
         })}
       </div>
 
-      {/* Overall Risk Score */}
-      {riskData.overall_risk_score && (
-        <div className="p-6 bg-gradient-to-r from-indigo-50 to-blue-50/30 rounded-xl border border-indigo-200/30 mb-6">
-          <div className="flex justify-between items-center">
-            <span className="font-bold text-lg text-gray-900">Overall Risk Score</span>
-            <span className="text-3xl font-bold text-indigo-600">{riskData.overall_risk_score.toFixed(1)}/10</span>
-          </div>
-          <div className="mt-3 w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-            <div 
-              className={`h-3 rounded-full bg-gradient-to-r ${getRiskColor(riskData.overall_risk_score)} transition-all duration-500 ease-out`}
-              style={{ width: `${(riskData.overall_risk_score / 10) * 100}%` }}
-            ></div>
+      {/* Risk Mitigation Strategies */}
+      {riskData.risk_mitigation && riskData.risk_mitigation.length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+              <Shield className="h-6 w-6 text-blue-600" />
+            </div>
+            Risk Mitigation Strategies
+          </h2>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {riskData.risk_mitigation.map((mitigation: string, index: number) => (
+              <div key={index} className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30 hover:shadow-md transition-all duration-200">
+                <div className="flex items-start gap-3">
+                  <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                    <CheckCircle className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <p className="text-blue-800 text-sm leading-relaxed">{mitigation}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      {/* Risk Summary */}
-      {riskData.risk_summary && (
-        <div className="p-6 bg-gradient-to-r from-gray-50 to-slate-50/30 rounded-xl border border-gray-200/30">
-          <h3 className="font-bold mb-3 text-lg text-gray-900">Risk Summary</h3>
-          <p className="text-gray-700 leading-relaxed">{riskData.risk_summary}</p>
+      {/* ESG and Operational Risks */}
+      {(riskData.esg_risks || riskData.operational_risks) && (
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* ESG Risks */}
+          {riskData.esg_risks && riskData.esg_risks.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+              <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-green-100 to-green-200 rounded-lg flex items-center justify-center">
+                  <Shield className="h-5 w-5 text-green-600" />
+                </div>
+                ESG Risks
+              </h2>
+
+              <div className="space-y-4">
+                {riskData.esg_risks.map((risk: string, index: number) => (
+                  <div key={index} className="p-4 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertTriangle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <p className="text-green-800 text-sm leading-relaxed">{risk}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Operational Risks */}
+          {riskData.operational_risks && riskData.operational_risks.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+              <h2 className="text-xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center">
+                  <Activity className="h-5 w-5 text-orange-600" />
+                </div>
+                Operational Risks
+              </h2>
+
+              <div className="space-y-4">
+                {riskData.operational_risks.map((risk: string, index: number) => (
+                  <div key={index} className="p-4 bg-gradient-to-r from-orange-50 to-red-50/30 rounded-xl border border-orange-200/30">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0 mt-1">
+                        <AlertCircle className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <p className="text-orange-800 text-sm leading-relaxed">{risk}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Risk Category Breakdown Summary */}
+      <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+            <Target className="h-6 w-6 text-indigo-600" />
+          </div>
+          Risk Profile Summary
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Business Risks */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200">
+            <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Users className="h-5 w-5 text-blue-600" />
+              Business Risks
+            </h4>
+            <div className="space-y-2">
+              {riskData.concentration_risk && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Concentration</span>
+                  <span className={`font-bold ${getRiskTextColor(riskData.concentration_risk)}`}>
+                    {riskData.concentration_risk}/10
+                  </span>
+                </div>
+              )}
+              {riskData.competition_risk && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Competition</span>
+                  <span className={`font-bold ${getRiskTextColor(riskData.competition_risk)}`}>
+                    {riskData.competition_risk}/10
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Technology Risks */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200">
+            <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Zap className="h-5 w-5 text-purple-600" />
+              Technology Risks
+            </h4>
+            <div className="space-y-2">
+              {riskData.disruption_risk && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Disruption</span>
+                  <span className={`font-bold ${getRiskTextColor(riskData.disruption_risk)}`}>
+                    {riskData.disruption_risk}/10
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* External Risks */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200">
+            <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <Shield className="h-5 w-5 text-green-600" />
+              External Risks
+            </h4>
+            <div className="space-y-2">
+              {riskData.regulatory_risk && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Regulatory</span>
+                  <span className={`font-bold ${getRiskTextColor(riskData.regulatory_risk)}`}>
+                    {riskData.regulatory_risk}/10
+                  </span>
+                </div>
+              )}
+              {riskData.cyclical_risk && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Cyclical</span>
+                  <span className={`font-bold ${getRiskTextColor(riskData.cyclical_risk)}`}>
+                    {riskData.cyclical_risk}/10
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -688,68 +1979,420 @@ const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
 const ValuationTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
   const valuationData = analysis.analysis_data?.valuation_metrics || {};
 
+  // Helper functions for valuation visualization
+  const getValueColor = (currentPrice: number, fairValue: number) => {
+    const ratio = currentPrice / fairValue;
+    if (ratio < 0.85) return { color: 'text-green-600', bg: 'from-green-50 to-green-100/50 border-green-200/50', label: 'Undervalued' };
+    if (ratio > 1.15) return { color: 'text-red-600', bg: 'from-red-50 to-red-100/50 border-red-200/50', label: 'Overvalued' };
+    return { color: 'text-blue-600', bg: 'from-blue-50 to-blue-100/50 border-blue-200/50', label: 'Fairly Valued' };
+  };
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000) return `$${(value / 1000).toFixed(1)}B`;
+    return `$${value.toFixed(2)}`;
+  };
+
+  const getMultipleColor = (multiple: number, type: string) => {
+    // Define reasonable ranges for different multiples
+    const ranges = {
+      pe: { low: 15, high: 25 },
+      pfcf: { low: 15, high: 25 },
+      pb: { low: 2, high: 5 },
+      ps: { low: 3, high: 8 },
+      ev_ebitda: { low: 10, high: 20 }
+    };
+
+    const range = ranges[type as keyof typeof ranges];
+    if (!range) return 'text-gray-600';
+
+    if (multiple < range.low) return 'text-green-600';
+    if (multiple > range.high) return 'text-red-600';
+    return 'text-blue-600';
+  };
+
+  const valuationConclusion = valuationData.current_price && valuationData.fair_value_estimate 
+    ? getValueColor(valuationData.current_price, valuationData.fair_value_estimate)
+    : null;
+
   return (
     <div className="space-y-8">
-      {/* Main Valuation Metrics */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-        <h2 className="text-2xl font-bold mb-8 text-gray-900 flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-green-200 rounded-xl flex items-center justify-center">
-            <DollarSign className="h-6 w-6 text-green-600" />
-          </div>
-          Valuation Metrics
-        </h2>
-        
-        {/* Key Valuation Numbers */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {valuationData.current_price && (
-            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
-              <div className="text-3xl font-bold text-blue-600 mb-2">${valuationData.current_price.toFixed(2)}</div>
-              <div className="text-sm font-medium text-blue-700">Current Price</div>
-            </div>
-          )}
-          {valuationData.fair_value_estimate && (
-            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
-              <div className="text-3xl font-bold text-green-600 mb-2">${valuationData.fair_value_estimate.toFixed(2)}</div>
-              <div className="text-sm font-medium text-green-700">Fair Value</div>
-            </div>
-          )}
-          {valuationData.upside_downside && (
-            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
-              <div className={`text-3xl font-bold mb-2 ${valuationData.upside_downside > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {valuationData.upside_downside > 0 ? '+' : ''}{valuationData.upside_downside.toFixed(1)}%
+      {/* Valuation Summary Hero */}
+      {(valuationData.current_price && valuationData.fair_value_estimate) && (
+        <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-3xl shadow-2xl p-8 text-white">
+          <div className="grid lg:grid-cols-3 gap-8 items-center">
+            <div className="lg:col-span-2">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                  <DollarSign className="h-8 w-8" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">Valuation Analysis</h1>
+                  <div className="flex items-center gap-4">
+                    <span className="text-green-100">
+                      {valuationConclusion?.label} • {valuationData.valuation_conclusion || 'Analysis Complete'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="text-sm font-medium text-purple-700">Upside/Downside</div>
+              
+              <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold mb-1">${valuationData.current_price.toFixed(2)}</div>
+                    <div className="text-green-100 text-sm">Current Price</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold mb-1">${valuationData.fair_value_estimate.toFixed(2)}</div>
+                    <div className="text-green-100 text-sm">Fair Value</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-2xl font-bold mb-1 ${valuationData.upside_downside && valuationData.upside_downside > 0 ? 'text-green-200' : 'text-red-200'}`}>
+                      {valuationData.upside_downside && valuationData.upside_downside > 0 ? '+' : ''}{valuationData.upside_downside?.toFixed(1)}%
+                    </div>
+                    <div className="text-green-100 text-sm">Potential Return</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Valuation Gauge */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
+              <h3 className="font-semibold mb-4">Valuation Score</h3>
+              {valuationData.margin_of_safety && (
+                <div className="relative w-32 h-32 mx-auto mb-4">
+                  <div className="absolute inset-0 rounded-full border-8 border-white/20"></div>
+                  <div 
+                    className="absolute inset-0 rounded-full border-8 border-transparent"
+                    style={{
+                      background: `conic-gradient(${valuationConclusion?.color.includes('green') ? '#10b981' : valuationConclusion?.color.includes('red') ? '#ef4444' : '#3b82f6'} ${Math.abs(valuationData.margin_of_safety) * 3.6}deg, transparent ${Math.abs(valuationData.margin_of_safety) * 3.6}deg)`,
+                    }}
+                  />
+                  <div className="absolute inset-4 bg-emerald-600 rounded-full flex items-center justify-center">
+                    <span className="text-xl font-bold">{valuationData.margin_of_safety?.toFixed(1)}%</span>
+                  </div>
+                </div>
+              )}
+              <div className="text-sm text-green-100">Margin of Safety</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Market Valuation Multiples */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 rounded-xl flex items-center justify-center">
+            <BarChart3 className="h-6 w-6 text-blue-600" />
+          </div>
+          Market Valuation Multiples
+        </h2>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* P/E Ratio */}
+          {valuationData.pe_ratio && (
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-xl border border-blue-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Calculator className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className={`text-2xl font-bold mb-1 ${getMultipleColor(valuationData.pe_ratio, 'pe')}`}>
+                {valuationData.pe_ratio.toFixed(1)}x
+              </div>
+              <div className="text-sm font-medium text-blue-700">P/E Ratio</div>
+              {valuationData.forward_pe && (
+                <div className="text-xs text-blue-600 mt-1">Fwd: {valuationData.forward_pe.toFixed(1)}x</div>
+              )}
+            </div>
+          )}
+
+          {/* P/FCF Ratio */}
+          {valuationData.pfcf_ratio && (
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl border border-green-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Activity className="h-5 w-5 text-green-600" />
+              </div>
+              <div className={`text-2xl font-bold mb-1 ${getMultipleColor(valuationData.pfcf_ratio, 'pfcf')}`}>
+                {valuationData.pfcf_ratio.toFixed(1)}x
+              </div>
+              <div className="text-sm font-medium text-green-700">P/FCF Ratio</div>
+            </div>
+          )}
+
+          {/* P/B Ratio */}
+          {valuationData.pb_ratio && (
+            <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl border border-purple-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Scale className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className={`text-2xl font-bold mb-1 ${getMultipleColor(valuationData.pb_ratio, 'pb')}`}>
+                {valuationData.pb_ratio.toFixed(1)}x
+              </div>
+              <div className="text-sm font-medium text-purple-700">P/B Ratio</div>
+            </div>
+          )}
+
+          {/* P/S Ratio */}
+          {valuationData.ps_ratio && (
+            <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100/50 rounded-xl border border-orange-200/50 hover:shadow-md transition-all duration-200">
+              <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                <PieChart className="h-5 w-5 text-orange-600" />
+              </div>
+              <div className={`text-2xl font-bold mb-1 ${getMultipleColor(valuationData.ps_ratio, 'ps')}`}>
+                {valuationData.ps_ratio.toFixed(1)}x
+              </div>
+              <div className="text-sm font-medium text-orange-700">P/S Ratio</div>
             </div>
           )}
         </div>
 
-        {/* ALL Valuation Ratios - INCLUDING MISSING ONES */}
-        <div className="space-y-4">
-          {valuationData.pe_ratio && (
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-indigo-50 to-blue-50/30 rounded-xl border border-indigo-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">P/E Ratio</span>
-              <span className="font-bold text-indigo-600 text-lg">{valuationData.pe_ratio.toFixed(1)}</span>
+        {/* Enterprise Value Multiples */}
+        {(valuationData.ev_revenue || valuationData.ev_ebitda) && (
+          <div className="mt-8 pt-6 border-t border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Enterprise Value Multiples</h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {valuationData.ev_revenue && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-teal-50 to-cyan-50/30 rounded-lg border border-teal-200/30">
+                  <span className="text-gray-700 font-medium">EV/Revenue</span>
+                  <span className={`font-bold text-lg ${getMultipleColor(valuationData.ev_revenue, 'ps')}`}>
+                    {valuationData.ev_revenue.toFixed(1)}x
+                  </span>
+                </div>
+              )}
+              {valuationData.ev_ebitda && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-indigo-50 to-blue-50/30 rounded-lg border border-indigo-200/30">
+                  <span className="text-gray-700 font-medium">EV/EBITDA</span>
+                  <span className={`font-bold text-lg ${getMultipleColor(valuationData.ev_ebitda, 'ev_ebitda')}`}>
+                    {valuationData.ev_ebitda.toFixed(1)}x
+                  </span>
+                </div>
+              )}
+              {valuationData.peg_ratio && (
+                <div className="flex justify-between items-center py-3 px-4 bg-gradient-to-r from-pink-50 to-rose-50/30 rounded-lg border border-pink-200/30">
+                  <span className="text-gray-700 font-medium">PEG Ratio</span>
+                  <span className={`font-bold text-lg ${valuationData.peg_ratio < 1 ? 'text-green-600' : valuationData.peg_ratio > 2 ? 'text-red-600' : 'text-blue-600'}`}>
+                    {valuationData.peg_ratio.toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
-          {valuationData.pfcf_ratio && (
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">P/FCF Ratio</span>
-              <span className="font-bold text-green-600 text-lg">{valuationData.pfcf_ratio.toFixed(1)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* DCF Intrinsic Valuation */}
+      {(valuationData.dcf_fair_value || valuationData.dcf_assumptions) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-xl flex items-center justify-center">
+              <Calculator className="h-6 w-6 text-emerald-600" />
             </div>
-          )}
-          {valuationData.pb_ratio && (
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">P/B Ratio</span>
-              <span className="font-bold text-purple-600 text-lg">{valuationData.pb_ratio.toFixed(1)}</span>
+            DCF Intrinsic Valuation
+          </h2>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* DCF Results */}
+            <div className="space-y-6">
+              <h3 className="text-lg font-semibold text-gray-800">Valuation Results</h3>
+              
+              {valuationData.dcf_fair_value && (
+                <div className="p-6 bg-gradient-to-r from-emerald-50 to-green-50/30 rounded-xl border border-emerald-200/30">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-emerald-600 mb-2">
+                      ${valuationData.dcf_fair_value.toFixed(2)}
+                    </div>
+                    <div className="text-emerald-700 font-medium">DCF Fair Value</div>
+                  </div>
+                  {valuationData.current_price && (
+                    <div className="mt-4 pt-4 border-t border-emerald-200">
+                      <div className="flex justify-between items-center">
+                        <span className="text-emerald-700">vs Current Price</span>
+                        <span className={`font-bold ${
+                          valuationData.dcf_fair_value > valuationData.current_price ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {(((valuationData.dcf_fair_value - valuationData.current_price) / valuationData.current_price) * 100).toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {valuationData.margin_of_safety && (
+                <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-700 font-medium">Margin of Safety</span>
+                    <span className={`font-bold text-lg ${
+                      valuationData.margin_of_safety > 0 ? 'text-green-600' : 'text-red-600'
+                    }`}>
+                      {valuationData.margin_of_safety.toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          {/* ADDED: Missing field from schema */}
-          {valuationData.ev_revenue && (
-            <div className="flex justify-between items-center py-4 px-6 bg-gradient-to-r from-teal-50 to-cyan-50/30 rounded-xl border border-teal-200/30 hover:shadow-md transition-all duration-200">
-              <span className="text-gray-700 font-medium">EV/Revenue Ratio</span>
-              <span className="font-bold text-teal-600 text-lg">{valuationData.ev_revenue.toFixed(1)}</span>
+
+            {/* DCF Assumptions */}
+            {valuationData.dcf_assumptions && Object.keys(valuationData.dcf_assumptions).length > 0 && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-gray-800">Key Assumptions</h3>
+                <div className="space-y-3">
+                  {Object.entries(valuationData.dcf_assumptions).map(([key, value]: [string, any]) => (
+                    <div key={key} className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg border border-gray-200">
+                      <span className="text-gray-700 font-medium capitalize">
+                        {key.replace(/_/g, ' ')}
+                      </span>
+                      <span className="font-bold text-gray-800">
+                        {typeof value === 'number' ? 
+                          (key.includes('rate') || key.includes('growth') ? `${(value * 100).toFixed(1)}%` : value.toFixed(2)) 
+                          : value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Relative Valuation & Peer Comparison */}
+      {(valuationData.pe_vs_industry || valuationData.ev_sales_vs_peers || valuationData.premium_discount) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+              <Target className="h-6 w-6 text-purple-600" />
             </div>
-          )}
+            Peer Comparison Analysis
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {valuationData.pe_vs_industry && (
+              <div className="p-6 bg-gradient-to-r from-purple-50 to-indigo-50/30 rounded-xl border border-purple-200/30">
+                <h4 className="font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                  <Eye className="h-5 w-5" />
+                  P/E vs Industry
+                </h4>
+                <p className="text-purple-700 text-sm">{valuationData.pe_vs_industry}</p>
+              </div>
+            )}
+
+            {valuationData.ev_sales_vs_peers && (
+              <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50/30 rounded-xl border border-blue-200/30">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5" />
+                  EV/Sales vs Peers
+                </h4>
+                <p className="text-blue-700 text-sm">{valuationData.ev_sales_vs_peers}</p>
+              </div>
+            )}
+
+            {valuationData.premium_discount && (
+              <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
+                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Premium/Discount
+                </h4>
+                <div className="text-center">
+                  <div className={`text-2xl font-bold ${
+                    valuationData.premium_discount > 0 ? 'text-red-600' : 'text-green-600'
+                  }`}>
+                    {valuationData.premium_discount > 0 ? '+' : ''}{valuationData.premium_discount.toFixed(1)}%
+                  </div>
+                  <div className="text-green-700 text-sm">vs Peers</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Sensitivity Analysis */}
+      {valuationData.sensitivity_analysis && Object.keys(valuationData.sensitivity_analysis).length > 0 && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-amber-100 to-amber-200 rounded-xl flex items-center justify-center">
+              <Zap className="h-6 w-6 text-amber-600" />
+            </div>
+            Sensitivity Analysis
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.entries(valuationData.sensitivity_analysis).map(([key, value]: [string, any]) => (
+              <div key={key} className="p-4 bg-gradient-to-r from-amber-50 to-yellow-50/30 rounded-xl border border-amber-200/30">
+                <h4 className="font-semibold text-amber-800 mb-2 capitalize">
+                  {key.replace(/_/g, ' ')}
+                </h4>
+                <div className="text-amber-700 font-bold text-lg">
+                  {typeof value === 'number' ? 
+                    (key.includes('rate') || key.includes('growth') ? `${(value * 100).toFixed(1)}%` : value.toFixed(2)) 
+                    : value}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-6 p-4 bg-gradient-to-r from-gray-50 to-amber-50/30 rounded-xl border border-gray-200/30">
+            <p className="text-gray-700 text-sm">
+              <strong>Sensitivity Analysis:</strong> Shows how valuation changes with different assumptions. 
+              Higher sensitivity indicates greater uncertainty in fair value estimates.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Valuation Summary */}
+      <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
+        <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+          <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+            <Award className="h-6 w-6 text-indigo-600" />
+          </div>
+          Valuation Summary
+        </h2>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {/* Current Valuation */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200 text-center">
+            <h4 className="font-semibold text-gray-800 mb-4">Current Valuation</h4>
+            {valuationData.current_price && (
+              <div className="text-2xl font-bold text-blue-600 mb-2">
+                ${valuationData.current_price.toFixed(2)}
+              </div>
+            )}
+            {valuationData.market_cap && (
+              <div className="text-gray-600">
+                Market Cap: {formatCurrency(valuationData.market_cap)}
+              </div>
+            )}
+          </div>
+
+          {/* Fair Value Range */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200 text-center">
+            <h4 className="font-semibold text-gray-800 mb-4">Fair Value</h4>
+            {valuationData.fair_value_estimate && (
+              <div className="text-2xl font-bold text-green-600 mb-2">
+                ${valuationData.fair_value_estimate.toFixed(2)}
+              </div>
+            )}
+            {valuationData.valuation_conclusion && (
+              <div className="text-gray-600">
+                {valuationData.valuation_conclusion}
+              </div>
+            )}
+          </div>
+
+          {/* Investment Potential */}
+          <div className="p-6 bg-white rounded-xl border border-gray-200 text-center">
+            <h4 className="font-semibold text-gray-800 mb-4">Investment Potential</h4>
+            {valuationData.upside_downside && (
+              <div className={`text-2xl font-bold mb-2 ${
+                valuationData.upside_downside > 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {valuationData.upside_downside > 0 ? '+' : ''}{valuationData.upside_downside.toFixed(1)}%
+              </div>
+            )}
+            <div className="text-gray-600">
+              {valuationData.upside_downside && valuationData.upside_downside > 0 ? 'Upside' : 'Downside'} Potential
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -809,46 +2452,135 @@ const ManagementAnalysis: React.FC<{
         Management Analysis
       </h2>
 
-      {/* Management Summary at the Top */}
+      {/* Management Summary at the Top - ENHANCED with all schema fields */}
       {(managementData.management_quality || managementData.corporate_governance) && (
         <div className="mb-8 p-6 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl text-white">
           <h3 className="font-bold mb-4 text-white text-lg">Management Overview</h3>
           <div className="grid md:grid-cols-3 gap-4">
-            <div>
-              <div className="text-2xl font-bold mb-1">
-                {managementData.management_quality ? 
-                  (managementData.management_quality >= 8 ? 'Excellent' : 
-                   managementData.management_quality >= 6 ? 'Good' : 
-                   managementData.management_quality >= 4 ? 'Fair' : 'Poor') 
-                  : 'N/A'}
+            {/* Management Quality Score - ADDED numerical display */}
+            {managementData.management_quality && (
+              <div>
+                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
+                  {managementData.management_quality}/10
+                  <span className="text-lg">
+                    ({managementData.management_quality >= 8 ? 'Excellent' : 
+                      managementData.management_quality >= 6 ? 'Good' : 
+                      managementData.management_quality >= 4 ? 'Fair' : 'Poor'})
+                  </span>
+                </div>
+                <div className="text-blue-100 text-sm">Management Quality</div>
               </div>
-              <div className="text-blue-100 text-sm">Leadership Quality</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold mb-1">
-                {managementData.corporate_governance ? 
-                  (managementData.corporate_governance >= 8 ? 'Strong' : 
-                   managementData.corporate_governance >= 6 ? 'Adequate' : 
-                   managementData.corporate_governance >= 4 ? 'Weak' : 'Poor') 
-                  : 'N/A'}
+            )}
+            
+            {/* Corporate Governance Score - ADDED numerical display */}
+            {managementData.corporate_governance && (
+              <div>
+                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
+                  {managementData.corporate_governance}/10
+                  <span className="text-lg">
+                    ({managementData.corporate_governance >= 8 ? 'Strong' : 
+                      managementData.corporate_governance >= 6 ? 'Adequate' : 
+                      managementData.corporate_governance >= 4 ? 'Weak' : 'Poor'})
+                  </span>
+                </div>
+                <div className="text-blue-100 text-sm">Corporate Governance</div>
               </div>
-              <div className="text-blue-100 text-sm">Governance Standards</div>
-            </div>
+            )}
+            
+            {/* CEO Tenure - ENHANCED display */}
             {managementData.ceo_tenure && (
               <div>
-                <div className="text-2xl font-bold mb-1">
-                  {managementData.ceo_tenure >= 10 ? 'Very Experienced' :
-                   managementData.ceo_tenure >= 5 ? 'Experienced' :
-                   managementData.ceo_tenure >= 2 ? 'Developing' : 'New'}
+                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
+                  {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'Year' : 'Years'}
+                  <span className="text-lg">
+                    ({managementData.ceo_tenure >= 10 ? 'Veteran' :
+                      managementData.ceo_tenure >= 5 ? 'Experienced' :
+                      managementData.ceo_tenure >= 2 ? 'Developing' : 'New'})
+                  </span>
                 </div>
-                <div className="text-blue-100 text-sm">CEO Experience</div>
+                <div className="text-blue-100 text-sm">CEO Tenure</div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* CEO Details & Track Record with AI Photo */}
+      {/* ADDED: Detailed Management Scores Section */}
+      {(managementData.management_quality || managementData.corporate_governance) && (
+        <div className="mb-8 grid md:grid-cols-2 gap-6">
+          {/* Management Quality Detailed Card */}
+          {managementData.management_quality && (
+            <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
+              <h4 className="font-bold text-green-800 mb-4 flex items-center gap-2">
+                <Award className="h-5 w-5" />
+                Management Quality Score
+              </h4>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-3xl font-bold text-green-600">
+                  {managementData.management_quality}/10
+                </span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  managementData.management_quality >= 8 ? 'bg-green-100 text-green-800' :
+                  managementData.management_quality >= 6 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {managementData.management_quality >= 8 ? 'Excellent' : 
+                   managementData.management_quality >= 6 ? 'Good' : 
+                   managementData.management_quality >= 4 ? 'Fair' : 'Poor'}
+                </span>
+              </div>
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full ${
+                    managementData.management_quality >= 8 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                    managementData.management_quality >= 6 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
+                    'bg-gradient-to-r from-red-500 to-rose-500'
+                  }`}
+                  style={{ width: `${managementData.management_quality * 10}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Corporate Governance Detailed Card */}
+          {managementData.corporate_governance && (
+            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30">
+              <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Corporate Governance Score
+              </h4>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-3xl font-bold text-blue-600">
+                  {managementData.corporate_governance}/10
+                </span>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                  managementData.corporate_governance >= 8 ? 'bg-blue-100 text-blue-800' :
+                  managementData.corporate_governance >= 6 ? 'bg-yellow-100 text-yellow-800' :
+                  'bg-red-100 text-red-800'
+                }`}>
+                  {managementData.corporate_governance >= 8 ? 'Strong' : 
+                   managementData.corporate_governance >= 6 ? 'Adequate' : 
+                   managementData.corporate_governance >= 4 ? 'Weak' : 'Poor'}
+                </span>
+              </div>
+              {/* Progress Bar */}
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className={`h-2 rounded-full ${
+                    managementData.corporate_governance >= 8 ? 'bg-gradient-to-r from-blue-500 to-indigo-500' :
+                    managementData.corporate_governance >= 6 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
+                    'bg-gradient-to-r from-red-500 to-rose-500'
+                  }`}
+                  style={{ width: `${managementData.corporate_governance * 10}%` }}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* CEO Details & Track Record with AI Photo - ENHANCED */}
       {(managementData.ceo_name || managementData.ceo_tenure || managementData.track_record) && (
         <div className="p-6 bg-gradient-to-r from-indigo-50 to-purple-50/30 rounded-xl border border-indigo-200/30">
           <h3 className="font-bold mb-4 text-lg text-gray-900 flex items-center gap-2">
@@ -856,22 +2588,21 @@ const ManagementAnalysis: React.FC<{
             Leadership & Track Record
           </h3>
           
-          {/* CEO Details with AI Photo */}
+          {/* CEO Details with AI Photo - ENHANCED with all CEO fields */}
           {(managementData.ceo_name || managementData.ceo_tenure) && (
             <div className="mb-4 pb-4 border-b border-indigo-200/40">
-              <div className="flex items-center gap-4">
+              <div className="flex items-start gap-4">
                 {/* AI-Powered CEO Photo */}
                 {managementData.ceo_name && ceoFallbackUrl && (
                   <div className="flex-shrink-0">
                     {(ceoLoading || imageLoading) ? (
-                      <div className="w-14 h-14 bg-gray-200 rounded-full animate-pulse" />
+                      <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse" />
                     ) : (
                       <img 
                         src={displayCeoUrl} 
                         alt={managementData.ceo_name}
-                        className="w-14 h-14 rounded-full object-cover border-2 border-indigo-200 shadow-sm"
+                        className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200 shadow-sm"
                         onError={(e) => {
-                          // Final fallback
                           console.warn(`CEO image failed to load: ${e.currentTarget.src}`);
                           if (ceoFallbackUrl) {
                             e.currentTarget.src = ceoFallbackUrl;
@@ -882,17 +2613,35 @@ const ManagementAnalysis: React.FC<{
                   </div>
                 )}
                 
-                <div className="flex flex-wrap gap-6">
+                <div className="flex-1">
+                  {/* CEO Name */}
                   {managementData.ceo_name && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600 text-sm font-medium">CEO:</span>
-                      <span className="font-semibold text-gray-900">{managementData.ceo_name}</span>
+                    <div className="mb-2">
+                      <span className="text-lg font-bold text-gray-900">{managementData.ceo_name}</span>
+                      <span className="text-gray-600 text-sm ml-2">Chief Executive Officer</span>
                     </div>
                   )}
+                  
+                  {/* CEO Tenure with detailed breakdown */}
                   {managementData.ceo_tenure && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-600 text-sm font-medium">Tenure:</span>
-                      <span className="font-semibold text-gray-900">{managementData.ceo_tenure} years</span>
+                    <div className="flex items-center gap-4 mb-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-gray-500" />
+                        <span className="text-gray-600 text-sm font-medium">Tenure:</span>
+                        <span className="font-semibold text-gray-900">
+                          {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'year' : 'years'}
+                        </span>
+                      </div>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        managementData.ceo_tenure >= 10 ? 'bg-blue-100 text-blue-800' :
+                        managementData.ceo_tenure >= 5 ? 'bg-green-100 text-green-800' :
+                        managementData.ceo_tenure >= 2 ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-orange-100 text-orange-800'
+                      }`}>
+                        {managementData.ceo_tenure >= 10 ? 'Veteran Leader' :
+                         managementData.ceo_tenure >= 5 ? 'Experienced' :
+                         managementData.ceo_tenure >= 2 ? 'Developing' : 'New Leadership'}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -900,25 +2649,74 @@ const ManagementAnalysis: React.FC<{
             </div>
           )}
           
-          {/* Track Record */}
+          {/* Track Record - ENHANCED formatting */}
           {managementData.track_record && (
             <div>
-              <h4 className="font-semibold text-gray-900 mb-3">Performance Track Record</h4>
-              <p className="text-gray-700 leading-relaxed">{managementData.track_record}</p>
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Performance Track Record
+              </h4>
+              <div className="p-4 bg-white rounded-lg border border-indigo-100">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                  {managementData.track_record}
+                </p>
+              </div>
             </div>
           )}
         </div>
       )}
 
-      {/* Debug Information (remove in production) */}
+      {/* ADDED: Overall Management Assessment */}
+      {(managementData.management_quality && managementData.corporate_governance) && (
+        <div className="mt-6 p-6 bg-gradient-to-r from-slate-50 to-gray-50/30 rounded-xl border border-gray-200/30">
+          <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Overall Management Assessment
+          </h4>
+          
+          <div className="grid md:grid-cols-3 gap-4 text-center">
+            <div className="p-4 bg-white rounded-lg border border-gray-100">
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {((managementData.management_quality + managementData.corporate_governance) / 2).toFixed(1)}/10
+              </div>
+              <div className="text-sm text-gray-600">Combined Score</div>
+            </div>
+            
+            <div className="p-4 bg-white rounded-lg border border-gray-100">
+              <div className={`text-2xl font-bold mb-1 ${
+                (managementData.management_quality + managementData.corporate_governance) / 2 >= 7 ? 'text-green-600' : 
+                (managementData.management_quality + managementData.corporate_governance) / 2 >= 5 ? 'text-yellow-600' : 
+                'text-red-600'
+              }`}>
+                {(managementData.management_quality + managementData.corporate_governance) / 2 >= 7 ? 'Strong' : 
+                 (managementData.management_quality + managementData.corporate_governance) / 2 >= 5 ? 'Moderate' : 
+                 'Weak'}
+              </div>
+              <div className="text-sm text-gray-600">Leadership Rating</div>
+            </div>
+            
+            {managementData.ceo_tenure && (
+              <div className="p-4 bg-white rounded-lg border border-gray-100">
+                <div className="text-2xl font-bold text-gray-900 mb-1">
+                  {managementData.ceo_tenure}
+                </div>
+                <div className="text-sm text-gray-600">Years of Leadership</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Debug Information (remove in production)
       {process.env.NODE_ENV === 'development' && (
         <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs">
           <strong>Debug Info:</strong>
           <div>CEO Photo URLs: {JSON.stringify(companyImages?.ceo_photo_urls || [])}</div>
           <div>Current CEO Photo: {ceoPhotoUrl || 'null'}</div>
           <div>Fallback CEO URL: {ceoFallbackUrl || 'null'}</div>
+          <div>Management Data: {JSON.stringify(managementData, null, 2)}</div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

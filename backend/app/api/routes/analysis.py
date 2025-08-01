@@ -116,3 +116,23 @@ def get_analysis_by_id(analysis_id: int, db: Session = Depends(get_db)):
         analysis_date=analysis.analysis_date,
         analysis_data=analysis.analysis_data
     )
+
+@router.get("/results/{ticker}/enhanced")
+def get_enhanced_analysis_results(ticker: str, db: Session = Depends(get_db)):
+    """Get enhanced analysis results with detailed breakdown."""
+    analysis_service = get_analysis_service()
+    analysis_result = analysis_service.get_latest_analysis(ticker, db)
+    
+    if not analysis_result:
+        raise HTTPException(status_code=404, detail="No analysis found")
+    
+    # Get enhanced summary
+    enhanced_summary = analysis_service.get_enhanced_analysis_summary(analysis_result)
+    
+    return {
+        "analysis_id": analysis_result.id,
+        "ticker": ticker.upper(),
+        "analysis_date": analysis_result.analysis_date,
+        "enhanced_summary": enhanced_summary,
+        "full_data": analysis_result.analysis_data  # Complete detailed data
+    }
