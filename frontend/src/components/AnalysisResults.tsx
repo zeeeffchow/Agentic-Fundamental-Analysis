@@ -30,7 +30,8 @@ import {
   AlertCircle,
   CheckCircle,
   XCircle,
-  Clock
+  User,
+  Heart
 } from 'lucide-react';
 import { analysisApi } from '../lib/api';
 import type { CompanyImages, AnalysisResponse } from '../types/images';
@@ -327,19 +328,19 @@ export const AnalysisResults: React.FC = () => {
 
 const OverviewTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
   const finalRec = analysis.analysis_data?.final_recommendation || {};
-  const financialData = analysis.analysis_data?.financial_data || {};
+  // const financialData = analysis.analysis_data?.financial_data || {};
   const businessData = analysis.analysis_data?.business_analysis || {};
   const valuationData = analysis.analysis_data?.valuation_metrics || {};
   
-  const getRecommendationColor = (recommendation: string) => {
-    switch (recommendation?.toUpperCase()) {
-      case 'STRONG BUY': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
-      case 'BUY': return 'text-green-700 bg-green-50 border-green-200';
-      case 'SELL': return 'text-red-700 bg-red-50 border-red-200';
-      case 'STRONG SELL': return 'text-red-800 bg-red-100 border-red-300';
-      default: return 'text-amber-700 bg-amber-50 border-amber-200';
-    }
-  };
+  // const getRecommendationColor = (recommendation: string) => {
+  //   switch (recommendation?.toUpperCase()) {
+  //     case 'STRONG BUY': return 'text-emerald-700 bg-emerald-50 border-emerald-200';
+  //     case 'BUY': return 'text-green-700 bg-green-50 border-green-200';
+  //     case 'SELL': return 'text-red-700 bg-red-50 border-red-200';
+  //     case 'STRONG SELL': return 'text-red-800 bg-red-100 border-red-300';
+  //     default: return 'text-amber-700 bg-amber-50 border-amber-200';
+  //   }
+  // };
 
   const getRecommendationIcon = (recommendation: string) => {
     switch (recommendation?.toUpperCase()) {
@@ -351,19 +352,19 @@ const OverviewTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => 
     }
   };
 
-  const getConvictionBadge = (conviction: string) => {
-    const colors = {
-      'High': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-      'Medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      'Low': 'bg-gray-100 text-gray-800 border-gray-200'
-    };
-    return colors[conviction as keyof typeof colors] || colors.Medium;
-  };
+  // const getConvictionBadge = (conviction: string) => {
+  //   const colors = {
+  //     'High': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  //     'Medium': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  //     'Low': 'bg-gray-100 text-gray-800 border-gray-200'
+  //   };
+  //   return colors[conviction as keyof typeof colors] || colors.Medium;
+  // };
 
   return (
     <div className="space-y-8">
       {/* Hero Recommendation Section */}
-      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+      <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 rounded-3xl shadow-2xl p-8 text-white">
         <div className="grid lg:grid-cols-3 gap-8 items-center">
           {/* Main Recommendation */}
           <div className="lg:col-span-2">
@@ -642,22 +643,53 @@ const OverviewTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => 
 
       {/* Portfolio Guidance */}
       {(finalRec.portfolio_fit || finalRec.position_sizing) && (
-        <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
-          <h3 className="text-xl font-bold mb-6 text-gray-900">Portfolio Guidance</h3>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+              <Target className="h-6 w-6 text-indigo-600" />
+            </div>
+            Portfolio Guidance
+          </h2>
+          
           <div className="grid md:grid-cols-2 gap-6">
             {finalRec.portfolio_fit && (
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Portfolio Fit</h4>
-                <p className="text-gray-700">{finalRec.portfolio_fit}</p>
+              <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <PieChart className="h-4 w-4 text-indigo-600" />
+                  Portfolio Fit
+                </h4>
+                <p className="text-gray-700 leading-relaxed">{finalRec.portfolio_fit}</p>
               </div>
             )}
+            
             {finalRec.position_sizing && (
-              <div>
-                <h4 className="font-semibold text-gray-800 mb-2">Position Sizing</h4>
-                <p className="text-gray-700">{finalRec.position_sizing}</p>
+              <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-indigo-600" />
+                  Position Sizing
+                </h4>
+                <p className="text-gray-700 leading-relaxed">{finalRec.position_sizing}</p>
               </div>
             )}
           </div>
+          
+          {/* Additional Portfolio Metrics if available */}
+          {finalRec.monitoring_metrics && finalRec.monitoring_metrics.length > 0 && (
+            <div className="mt-6 p-6 bg-gradient-to-br from-indigo-50 to-purple-50/30 rounded-xl border border-indigo-200/30">
+              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                <Activity className="h-4 w-4 text-indigo-600" />
+                Key Monitoring Metrics
+              </h4>
+              <div className="grid md:grid-cols-2 gap-3">
+                {finalRec.monitoring_metrics.slice(0, 6).map((metric: string, index: number) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-indigo-500 rounded-full flex-shrink-0"></div>
+                    <span className="text-gray-700 text-sm">{metric}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -691,6 +723,142 @@ const FinancialTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
 
   return (
     <div className="space-y-8">
+      {/* Financial Health Hero Section */}
+      <div className="bg-gradient-to-r bg-gradient-to-r from-purple-600 via-violet-600 to-purple-600 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="grid lg:grid-cols-3 gap-8 items-center">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <BarChart3 className="h-8 w-8" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Financial Health</h1>
+                <div className="flex items-center gap-4">
+                  <span className="text-blue-100">
+                    {financialData.revenue ? `$${formatNumber(financialData.revenue)} Revenue` : 'Financial Analysis'}
+                  </span>
+                  {financialData.revenue_growth_3y && (
+                    <span className={`flex items-center gap-1 ${
+                      financialData.revenue_growth_3y > 0 ? 'text-green-200' : 'text-red-200'
+                    }`}>
+                      {getTrendIcon(financialData.revenue_growth_3y)}
+                      {financialData.revenue_growth_3y.toFixed(1)}% 3Y Growth
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Key Financial Highlights */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5" />
+                Key Financial Metrics
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {financialData.net_margin && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-100">Net Margin</span>
+                    <span className="font-bold text-white">{financialData.net_margin.toFixed(1)}%</span>
+                  </div>
+                )}
+                {financialData.fcf_margin && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-100">FCF Margin</span>
+                    <span className="font-bold text-white">{financialData.fcf_margin.toFixed(1)}%</span>
+                  </div>
+                )}
+                {keyRatios.roe && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-100">Return on Equity</span>
+                    <span className="font-bold text-white">{keyRatios.roe.toFixed(1)}%</span>
+                  </div>
+                )}
+                {keyRatios.debt_to_equity && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-blue-100">Debt/Equity</span>
+                    <span className="font-bold text-white">{keyRatios.debt_to_equity.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Score Gauge (if available) */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
+            <h3 className="font-semibold mb-4 text-white">Financial Strength</h3>
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              {(() => {
+                // Fixed Financial Strength Calculation
+                let score = 5; // Start with base score of 5
+                
+                // Net margin scoring (max +2 points)
+                if (financialData.net_margin > 20) score += 2;
+                else if (financialData.net_margin > 15) score += 1.5;
+                else if (financialData.net_margin > 10) score += 1;
+                else if (financialData.net_margin > 5) score += 0.5;
+                
+                // FCF margin scoring (max +2 points)
+                if (financialData.fcf_margin > 15) score += 2;
+                else if (financialData.fcf_margin > 10) score += 1.5;
+                else if (financialData.fcf_margin > 5) score += 1;
+                else if (financialData.fcf_margin > 0) score += 0.5;
+                
+                // ROE scoring (max +2 points)
+                if (keyRatios.roe > 25) score += 2;
+                else if (keyRatios.roe > 20) score += 1.5;
+                else if (keyRatios.roe > 15) score += 1;
+                else if (keyRatios.roe > 10) score += 0.5;
+                
+                // Debt management scoring (max +1 point)
+                if (keyRatios.debt_to_equity < 0.3) score += 1;
+                else if (keyRatios.debt_to_equity < 0.5) score += 0.7;
+                else if (keyRatios.debt_to_equity < 1.0) score += 0.3;
+                
+                // Cap at exactly 10
+                score = Math.min(score, 10);
+                const percentage = (score / 10) * 100;
+                
+                return (
+                  <>
+                    {/* Background circle */}
+                    <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke="rgba(255, 255, 255, 0.2)"
+                        strokeWidth="8"
+                      />
+                      {/* Progress arc */}
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        fill="none"
+                        stroke={score >= 8 ? '#10b981' : score >= 6 ? '#f59e0b' : '#ef4444'}
+                        strokeWidth="8"
+                        strokeLinecap="round"
+                        strokeDasharray={2 * Math.PI * 40}
+                        strokeDashoffset={2 * Math.PI * 40 * (1 - percentage / 100)}
+                        style={{
+                          transition: 'stroke-dashoffset 0.5s ease-in-out'
+                        }}
+                      />
+                    </svg>
+                    {/* Score display */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-2xl font-bold text-white">{score.toFixed(1)}</span>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            <div className="text-sm text-blue-200">Out of 10.0</div>
+          </div>
+        </div>
+      </div>
       {/* Revenue Growth Analysis */}
       {(financialData.revenue || financialData.revenue_growth_1y) && (
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
@@ -1196,8 +1364,133 @@ const BusinessTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => 
     }
   };
 
+  const getBusinessStrengthScore = () => {
+    let score = 5; // Base score
+    
+    // Moat strength scoring
+    if (businessData.moat_strength?.toLowerCase() === 'wide') score += 2;
+    else if (businessData.moat_strength?.toLowerCase() === 'narrow') score += 1;
+    
+    // Market share scoring
+    if (businessData.market_share > 20) score += 1.5;
+    else if (businessData.market_share > 10) score += 1;
+    
+    // Brand strength scoring
+    if (businessData.brand_strength >= 8) score += 1;
+    else if (businessData.brand_strength >= 6) score += 0.5;
+    
+    // Competitive advantages scoring
+    if (businessData.competitive_advantages?.length >= 3) score += 1;
+    
+    return Math.min(score, 10); // Cap at 10
+  };
+
+  const businessScore = getBusinessStrengthScore();
+
   return (
     <div className="space-y-8">
+      {/* Business Strength Hero Section */}
+      <div className="bg-gradient-to-r bg-gradient-to-r from-teal-600 via-cyan-600 to-teal-700 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="grid lg:grid-cols-3 gap-8 items-center">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Building className="h-8 w-8" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Business Analysis</h1>
+                <div className="flex items-center gap-4">
+                  <span className="text-emerald-100">
+                    {businessData.moat_strength ? `${businessData.moat_strength} Economic Moat` : 'Competitive Analysis'}
+                  </span>
+                  {businessData.market_share && (
+                    <span className="text-green-200">
+                      {businessData.market_share.toFixed(1)}% Market Share
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* Key Business Highlights */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Competitive Position
+              </h3>
+              
+              {/* Option 1: Grid Layout for better structure */}
+              <div className="grid grid-cols-2 gap-4">
+                {businessData.moat_strength && (
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <div className="text-emerald-200 text-sm mb-1">Economic Moat</div>
+                    <div className="font-bold text-white text-lg capitalize">{businessData.moat_strength}</div>
+                  </div>
+                )}
+                
+                {businessData.brand_strength && (
+                  <div className="bg-white/10 rounded-lg p-3">
+                    <div className="text-emerald-200 text-sm mb-1">Brand Strength</div>
+                    <div className="font-bold text-white text-lg">{businessData.brand_strength}/10</div>
+                  </div>
+                )}
+                
+                {businessData.market_position && (
+                  <div className="bg-white/10 rounded-lg p-3 col-span-2">
+                    <div className="text-emerald-200 text-sm mb-1">Market Position</div>
+                    <div className="font-bold text-white text-base leading-tight">{businessData.market_position}</div>
+                  </div>
+                )}
+                
+                {businessData.competitive_advantages?.length && (
+                  <div className="bg-white/10 rounded-lg p-3 col-span-2">
+                    <div className="text-emerald-200 text-sm mb-1">Competitive Advantages</div>
+                    <div className="font-bold text-white text-lg">{businessData.competitive_advantages.length} Key Advantages</div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Business Strength Gauge */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
+            <h3 className="font-semibold mb-4 text-white">Business Strength</h3>
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              {/* Background circle */}
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.2)"
+                  strokeWidth="8"
+                />
+                {/* Progress arc */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke={businessScore >= 8 ? '#10b981' : businessScore >= 6 ? '#f59e0b' : '#ef4444'}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 40}
+                  strokeDashoffset={2 * Math.PI * 40 * (1 - businessScore / 10)}
+                  style={{
+                    transition: 'stroke-dashoffset 0.5s ease-in-out'
+                  }}
+                />
+              </svg>
+              {/* Score display */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">{businessScore.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="text-sm text-emerald-200">Out of 10.0</div>
+          </div>
+        </div>
+      </div>
       {/* Business Model Overview */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
         <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
@@ -1499,91 +1792,218 @@ const BusinessTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => 
 
       {/* Competitive Landscape */}
       {businessData.key_competitors && businessData.key_competitors.length > 0 && (
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
-              <Users className="h-6 w-6 text-red-600" />
-            </div>
-            Competitive Landscape
-          </h2>
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+    <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+      <div className="w-12 h-12 bg-gradient-to-br from-red-100 to-red-200 rounded-xl flex items-center justify-center">
+        <Zap className="h-6 w-6 text-red-600" />
+      </div>
+      Competitive Landscape
+    </h2>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {businessData.key_competitors.map((competitor: any, index: number) => (
-              <div key={index} className="p-4 bg-gradient-to-r from-red-50 to-pink-50/30 rounded-xl border border-red-200/30 hover:shadow-md transition-all duration-200 text-center">
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                  <Users className="h-5 w-5 text-red-600" />
-                </div>
-                <h4 className="font-semibold text-red-800 mb-2">
+    {/* Company's Market Position Header */}
+    {businessData.market_share && (
+      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-semibold text-blue-800 mb-1">
+              {analysis.company?.company_name || analysis.company?.ticker || 'Company'} Market Position
+            </h3>
+            <p className="text-blue-700 text-sm">Market share in the total addressable market</p>
+          </div>
+          <div className="text-right">
+            <div className="text-2xl font-bold text-blue-600">
+              {businessData.market_share.toFixed(1)}%
+            </div>
+            <div className="text-blue-700 text-sm font-medium">Market Share</div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* Competitors Grid */}
+    <div className="space-y-4">
+      <h3 className="font-semibold text-gray-900 mb-4">Key Competitors & Market Share</h3>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {businessData.key_competitors.map((competitor: any, index: number) => (
+          <div 
+            key={index} 
+            className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                <h4 className="font-semibold text-gray-900 mb-1">
                   {typeof competitor === 'object' ? competitor.name : competitor}
                 </h4>
-                {typeof competitor === 'object' && competitor.market_share && (
-                  <div className="text-red-600 font-bold text-lg">
-                    {competitor.market_share}% Share
+                <div className="text-gray-600 text-sm">Competitor</div>
+              </div>
+              
+              {typeof competitor === 'object' && competitor.market_share && (
+                <div className="text-right ml-3">
+                  <div className="text-xl font-bold text-red-600">
+                    {competitor.market_share}%
                   </div>
-                )}
+                  <div className="text-red-700 text-xs font-medium">Market Share</div>
+                </div>
+              )}
+            </div>
+            
+            {/* Optional: Add competitive comparison if market shares are available */}
+            {typeof competitor === 'object' && competitor.market_share && businessData.market_share && (
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">vs Company:</span>
+                  <span className={`font-medium ${
+                    businessData.market_share > competitor.market_share 
+                      ? 'text-green-600' 
+                      : businessData.market_share < competitor.market_share 
+                        ? 'text-red-600' 
+                        : 'text-gray-600'
+                  }`}>
+                    {businessData.market_share > competitor.market_share ? '↑ Leading' :
+                     businessData.market_share < competitor.market_share ? '↓ Behind' : '→ Equal'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+)}
+
+{(businessData.customer_segments || businessData.customer_loyalty || businessData.pricing_power) && (
+  <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+    <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+      <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+        <Target className="h-6 w-6 text-purple-600" />
+      </div>
+      Customer & Market Dynamics
+    </h2>
+
+    <div className="grid md:grid-cols-3 gap-6">
+      {/* Customer Segments - Keep as is, looks good */}
+      {businessData.customer_segments && businessData.customer_segments.length > 0 && (
+        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Users className="h-5 w-5 text-purple-600" />
+            Customer Segments
+          </h4>
+          <div className="space-y-2">
+            {businessData.customer_segments.map((segment: string, index: number) => (
+              <div key={index} className="p-2 bg-purple-50 rounded-lg border border-purple-200">
+                <span className="text-purple-800 font-medium">{segment}</span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Customer & Market Information */}
-      {(businessData.customer_segments || businessData.customer_loyalty || businessData.pricing_power) && (
-        <div className="bg-gradient-to-r from-gray-50 to-blue-50/30 rounded-2xl shadow-lg border border-gray-200/30 p-8">
-          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
-              <Target className="h-6 w-6 text-purple-600" />
+      {/* Customer Loyalty - Enhanced */}
+      {businessData.customer_loyalty && (
+        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-green-600" />
+            Customer Loyalty
+          </h4>
+          
+          {/* Enhanced loyalty display */}
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50/30 rounded-xl p-4 border border-green-200/30">
+            <div className="flex items-center justify-center mb-3">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                <Heart className="h-6 w-6 text-green-600" />
+              </div>
             </div>
-            Customer & Market Dynamics
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {/* Customer Segments */}
-            {businessData.customer_segments && businessData.customer_segments.length > 0 && (
-              <div className="p-6 bg-white rounded-xl border border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Users className="h-5 w-5 text-purple-600" />
-                  Customer Segments
-                </h4>
-                <div className="space-y-2">
-                  {businessData.customer_segments.map((segment: string, index: number) => (
-                    <div key={index} className="p-2 bg-purple-50 rounded-lg border border-purple-200">
-                      <span className="text-purple-800 font-medium">{segment}</span>
-                    </div>
-                  ))}
-                </div>
+            
+            <div className="text-center">
+              <div className="text-lg font-bold text-green-800 mb-2 leading-tight">
+                {businessData.customer_loyalty}
               </div>
-            )}
-
-            {/* Customer Loyalty */}
-            {businessData.customer_loyalty && (
-              <div className="p-6 bg-white rounded-xl border border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Award className="h-5 w-5 text-green-600" />
-                  Customer Loyalty
-                </h4>
-                <div className="text-center">
-                  <div className="text-xl font-bold text-green-600 mb-2">
-                    {businessData.customer_loyalty}
+              <div className="text-green-700 text-sm font-medium">Loyalty Assessment</div>
+            </div>
+            
+            {/* Optional: Add loyalty strength indicator if the text suggests it */}
+            {(() => {
+              const loyaltyText = businessData.customer_loyalty.toLowerCase();
+              let strength = 'Medium';
+              let color = 'bg-yellow-500';
+              
+              if (loyaltyText.includes('high') || loyaltyText.includes('strong') || loyaltyText.includes('excellent')) {
+                strength = 'High';
+                color = 'bg-green-500';
+              } else if (loyaltyText.includes('low') || loyaltyText.includes('weak') || loyaltyText.includes('poor')) {
+                strength = 'Low';
+                color = 'bg-red-500';
+              }
+              
+              return (
+                <div className="mt-3 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${color}`}></div>
+                    <span className="text-green-700 text-xs font-medium">{strength} Loyalty</span>
                   </div>
-                  <div className="text-sm text-green-700">Loyalty Level</div>
                 </div>
-              </div>
-            )}
-
-            {/* Pricing Power */}
-            {businessData.pricing_power && (
-              <div className="p-6 bg-white rounded-xl border border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-indigo-600" />
-                  Pricing Power
-                </h4>
-                <p className="text-indigo-700">{businessData.pricing_power}</p>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}
+
+      {/* Pricing Power - Enhanced */}
+      {businessData.pricing_power && (
+        <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+          <h4 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+            <Crown className="h-5 w-5 text-indigo-600" />
+            Pricing Power
+          </h4>
+          
+          {/* Enhanced pricing power display */}
+          <div className="bg-gradient-to-br from-indigo-50 to-blue-50/30 rounded-xl p-4 border border-indigo-200/30">
+            <div className="flex items-center justify-center mb-3">
+              <div className="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                <DollarSign className="h-6 w-6 text-indigo-600" />
+              </div>
+            </div>
+            
+            <div className="text-center">
+              <div className="text-sm font-medium text-indigo-800 mb-2 leading-relaxed">
+                {businessData.pricing_power}
+              </div>
+              <div className="text-indigo-700 text-xs font-medium">Market Position</div>
+            </div>
+            
+            {/* Optional: Add pricing power strength indicator */}
+            {(() => {
+              const pricingText = businessData.pricing_power.toLowerCase();
+              let strength = 'Moderate';
+              let color = 'bg-yellow-500';
+              let icon = '→';
+              
+              if (pricingText.includes('strong') || pricingText.includes('high') || pricingText.includes('significant')) {
+                strength = 'Strong';
+                color = 'bg-green-500';
+                icon = '↑';
+              } else if (pricingText.includes('weak') || pricingText.includes('low') || pricingText.includes('limited')) {
+                strength = 'Limited';
+                color = 'bg-red-500';
+                icon = '↓';
+              }
+              
+              return (
+                <div className="mt-3 flex items-center justify-center">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-3 h-3 rounded-full ${color}`}></div>
+                    <span className="text-indigo-700 text-xs font-medium">{icon} {strength} Power</span>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
     </div>
   );
 };
@@ -1616,18 +2036,18 @@ const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
     return { level: 'High Risk', icon: XCircle, color: 'text-red-600' };
   };
 
-  const getRiskIcon = (category: string) => {
-    switch (category) {
-      case 'concentration': return Target;
-      case 'competition': return Users;
-      case 'disruption': return Zap;
-      case 'regulatory': return Shield;
-      case 'cyclical': return Activity;
-      case 'leverage': return Scale;
-      case 'liquidity': return TrendingDown;
-      default: return AlertTriangle;
-    }
-  };
+  // const getRiskIcon = (category: string) => {
+  //   switch (category) {
+  //     case 'concentration': return Target;
+  //     case 'competition': return Users;
+  //     case 'disruption': return Zap;
+  //     case 'regulatory': return Shield;
+  //     case 'cyclical': return Activity;
+  //     case 'leverage': return Scale;
+  //     case 'liquidity': return TrendingDown;
+  //     default: return AlertTriangle;
+  //   }
+  // };
 
   // Enhanced risk categories with detailed information
   const enhancedRiskCategories = [
@@ -1693,7 +2113,7 @@ const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
     <div className="space-y-8">
       {/* Overall Risk Assessment Header */}
       {riskData.overall_risk_score && (
-        <div className="bg-gradient-to-r from-slate-600 via-gray-600 to-slate-700 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="bg-gradient-to-r bg-gradient-to-r from-slate-600 via-gray-600 to-slate-700 rounded-3xl shadow-2xl p-8 text-white">
           <div className="grid lg:grid-cols-3 gap-8 items-center">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
@@ -1725,23 +2145,40 @@ const RiskTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) => {
 
             {/* Overall Risk Score Gauge */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <h3 className="font-semibold mb-4">Overall Risk Score</h3>
+              <h3 className="font-semibold mb-4 text-white">Overall Risk Score</h3>
               <div className="relative w-32 h-32 mx-auto mb-4">
-                {/* Risk Gauge Background */}
-                <div className="absolute inset-0 rounded-full border-8 border-white/20"></div>
-                {/* Risk Gauge Fill */}
-                <div 
-                  className={`absolute inset-0 rounded-full border-8 border-transparent`}
-                  style={{
-                    background: `conic-gradient(${
+                {/* Background circle */}
+                <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke="rgba(255, 255, 255, 0.2)"
+                    strokeWidth="8"
+                  />
+                  {/* Progress arc */}
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="40"
+                    fill="none"
+                    stroke={
                       riskData.overall_risk_score <= 3 ? '#10b981' :
                       riskData.overall_risk_score <= 6 ? '#f59e0b' : '#ef4444'
-                    } ${(riskData.overall_risk_score / 10) * 360}deg, transparent ${(riskData.overall_risk_score / 10) * 360}deg)`,
-                    borderRadius: '50%'
-                  }}
-                />
-                <div className="absolute inset-4 bg-slate-600 rounded-full flex items-center justify-center">
-                  <span className="text-2xl font-bold">{riskData.overall_risk_score.toFixed(1)}</span>
+                    }
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={2 * Math.PI * 40}
+                    strokeDashoffset={2 * Math.PI * 40 * (1 - (riskData.overall_risk_score / 10))}
+                    style={{
+                      transition: 'stroke-dashoffset 0.5s ease-in-out'
+                    }}
+                  />
+                </svg>
+                {/* Score display */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-white">{riskData.overall_risk_score.toFixed(1)}</span>
                 </div>
               </div>
               <div className="text-sm text-slate-200">Out of 10.0</div>
@@ -2018,7 +2455,7 @@ const ValuationTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
     <div className="space-y-8">
       {/* Valuation Summary Hero */}
       {(valuationData.current_price && valuationData.fair_value_estimate) && (
-        <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="bg-gradient-to-r bg-gradient-to-r from-green-600 via-emerald-600 to-green-700 rounded-3xl shadow-2xl p-8 text-white">
           <div className="grid lg:grid-cols-3 gap-8 items-center">
             <div className="lg:col-span-2">
               <div className="flex items-center gap-4 mb-6">
@@ -2055,24 +2492,44 @@ const ValuationTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
               </div>
             </div>
 
-            {/* Valuation Gauge */}
+            {/* Enhanced Valuation Display */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
-              <h3 className="font-semibold mb-4">Valuation Score</h3>
-              {valuationData.margin_of_safety && (
+              <h3 className="font-semibold mb-4 text-white">Valuation Assessment</h3>
+              
+              {analysis.analysis_data?.final_recommendation?.valuation_score && (
                 <div className="relative w-32 h-32 mx-auto mb-4">
-                  <div className="absolute inset-0 rounded-full border-8 border-white/20"></div>
-                  <div 
-                    className="absolute inset-0 rounded-full border-8 border-transparent"
-                    style={{
-                      background: `conic-gradient(${valuationConclusion?.color.includes('green') ? '#10b981' : valuationConclusion?.color.includes('red') ? '#ef4444' : '#3b82f6'} ${Math.abs(valuationData.margin_of_safety) * 3.6}deg, transparent ${Math.abs(valuationData.margin_of_safety) * 3.6}deg)`,
-                    }}
-                  />
-                  <div className="absolute inset-4 bg-emerald-600 rounded-full flex items-center justify-center">
-                    <span className="text-xl font-bold">{valuationData.margin_of_safety?.toFixed(1)}%</span>
+                  <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255, 255, 255, 0.2)" strokeWidth="8" />
+                    <circle
+                      cx="50" cy="50" r="40" fill="none" strokeWidth="8" strokeLinecap="round"
+                      stroke={
+                        analysis.analysis_data.final_recommendation.valuation_score >= 8 ? '#10b981' : 
+                        analysis.analysis_data.final_recommendation.valuation_score >= 6 ? '#f59e0b' : '#ef4444'
+                      }
+                      strokeDasharray={2 * Math.PI * 40}
+                      strokeDashoffset={2 * Math.PI * 40 * (1 - analysis.analysis_data.final_recommendation.valuation_score / 10)}
+                      style={{ transition: 'stroke-dashoffset 0.5s ease-in-out' }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-white">
+                      {analysis.analysis_data.final_recommendation.valuation_score.toFixed(1)}
+                    </span>
                   </div>
                 </div>
               )}
-              <div className="text-sm text-green-100">Margin of Safety</div>
+              
+              <div className="text-sm text-slate-200 mb-2">Out of 10.0</div>
+              
+              {/* Show margin of safety as additional context */}
+              {valuationData.margin_of_safety && (
+                <div className={`text-lg font-semibold ${
+                  valuationData.margin_of_safety > 0 ? 'text-green-200' : 'text-red-200'
+                }`}>
+                  {Math.abs(valuationData.margin_of_safety).toFixed(0)}% 
+                  {valuationData.margin_of_safety > 0 ? ' Undervalued' : ' Overvalued'}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2399,324 +2856,372 @@ const ValuationTab: React.FC<{ analysis: AnalysisResponse }> = ({ analysis }) =>
   );
 };
 
-const ManagementAnalysis: React.FC<{
-  analysis: AnalysisResponse;
+const ManagementAnalysis: React.FC<{ 
+  analysis: AnalysisResponse; 
   companyImages: CompanyImages | null;
-}> = ({ analysis, companyImages }) => {
+}> = ({ analysis }) => {
   const managementData = analysis.analysis_data?.management_analysis || {};
-  const [ceoPhotoUrl, setCeoPhotoUrl] = useState<string | null>(null);
-  const [ceoLoading, setCeoLoading] = useState(true);
   
-  // Generate CEO fallback
-  const ceoFallbackUrl = managementData.ceo_name 
-    ? AIImageService.generateCEOFallback(managementData.ceo_name)
-    : null;
+  // Calculate overall management score
+  const getOverallManagementScore = () => {
+    const scores = [];
+    if (managementData.management_quality) scores.push(managementData.management_quality);
+    if (managementData.corporate_governance) scores.push(managementData.corporate_governance);
+    if (managementData.communication_quality) scores.push(managementData.communication_quality);
+    if (managementData.transparency_score) scores.push(managementData.transparency_score);
+    
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+  };
 
-  // Load the best CEO photo asynchronously
-  useEffect(() => {
-    const loadBestCEOPhoto = async () => {
-      if (!managementData.ceo_name) {
-        setCeoLoading(false);
-        return;
-      }
+  const overallScore = getOverallManagementScore();
+  
+  // Helper functions for consistent styling
+  const getScoreColor = (score: number) => {
+    if (score >= 8) return 'text-emerald-600';
+    if (score >= 6) return 'text-blue-600';
+    if (score >= 4) return 'text-amber-600';
+    return 'text-red-600';
+  };
+  
+  const getScoreBadge = (score: number) => {
+    if (score >= 8) return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+    if (score >= 6) return 'bg-blue-100 text-blue-800 border-blue-200';
+    if (score >= 4) return 'bg-amber-100 text-amber-800 border-amber-200';
+    return 'bg-red-100 text-red-800 border-red-200';
+  };
+  
+  const getScoreLabel = (score: number) => {
+    if (score >= 8) return 'Excellent';
+    if (score >= 6) return 'Good';
+    if (score >= 4) return 'Fair';
+    return 'Poor';
+  };
 
-      setCeoLoading(true);
-      try {
-        const bestPhoto = await AIImageService.getBestCEOPhoto(
-          managementData.ceo_name, 
-          companyImages
-        );
-        setCeoPhotoUrl(bestPhoto);
-      } catch (error) {
-        console.error('Error loading CEO photo:', error);
-        setCeoPhotoUrl(ceoFallbackUrl);
-      } finally {
-        setCeoLoading(false);
-      }
-    };
-
-    loadBestCEOPhoto();
-  }, [managementData.ceo_name, companyImages]);
-
-  const { currentUrl: displayCeoUrl, isLoading: imageLoading } = useImageLoader(
-    ceoPhotoUrl,
-    ceoFallbackUrl || ''
-  );
+  const getTenureLabel = (tenure: number) => {
+    if (tenure >= 10) return 'Veteran Leader';
+    if (tenure >= 5) return 'Experienced';
+    if (tenure >= 2) return 'Developing';
+    return 'New Leadership';
+  };
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
-      <h2 className="text-2xl font-bold mb-8 text-gray-900 flex items-center gap-3">
-        <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-indigo-200 rounded-xl flex items-center justify-center">
-          <Users className="h-6 w-6 text-blue-600" />
-        </div>
-        Management Analysis
-      </h2>
-
-      {/* Management Summary at the Top - ENHANCED with all schema fields */}
-      {(managementData.management_quality || managementData.corporate_governance) && (
-        <div className="mb-8 p-6 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-xl text-white">
-          <h3 className="font-bold mb-4 text-white text-lg">Management Overview</h3>
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Management Quality Score - ADDED numerical display */}
-            {managementData.management_quality && (
-              <div>
-                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
-                  {managementData.management_quality}/10
-                  <span className="text-lg">
-                    ({managementData.management_quality >= 8 ? 'Excellent' : 
-                      managementData.management_quality >= 6 ? 'Good' : 
-                      managementData.management_quality >= 4 ? 'Fair' : 'Poor'})
-                  </span>
-                </div>
-                <div className="text-blue-100 text-sm">Management Quality</div>
+    <div className="space-y-8">
+      {/* Management Excellence Hero Section */}
+      <div className="bg-gradient-to-r bg-gradient-to-r from-orange-600 via-amber-600 to-orange-700 rounded-3xl shadow-2xl p-8 text-white">
+        <div className="grid lg:grid-cols-3 gap-8 items-center">
+          <div className="lg:col-span-2">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="p-4 rounded-2xl bg-white/20 backdrop-blur-sm">
+                <Crown className="h-8 w-8" />
               </div>
-            )}
+              <div>
+                <h1 className="text-4xl font-bold mb-2">Management Analysis</h1>
+                <div className="flex items-center gap-4">
+                  <span className="text-indigo-100">
+                    {managementData.ceo_name || 'Leadership Team Assessment'}
+                  </span>
+                  {managementData.ceo_tenure && (
+                    <span className="text-purple-200">
+                      {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'Year' : 'Years'} Tenure
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
             
-            {/* Corporate Governance Score - ADDED numerical display */}
-            {managementData.corporate_governance && (
-              <div>
-                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
-                  {managementData.corporate_governance}/10
-                  <span className="text-lg">
-                    ({managementData.corporate_governance >= 8 ? 'Strong' : 
-                      managementData.corporate_governance >= 6 ? 'Adequate' : 
-                      managementData.corporate_governance >= 4 ? 'Weak' : 'Poor'})
-                  </span>
-                </div>
-                <div className="text-blue-100 text-sm">Corporate Governance</div>
-              </div>
-            )}
-            
-            {/* CEO Tenure - ENHANCED display */}
-            {managementData.ceo_tenure && (
-              <div>
-                <div className="text-2xl font-bold mb-1 flex items-center gap-2">
-                  {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'Year' : 'Years'}
-                  <span className="text-lg">
-                    ({managementData.ceo_tenure >= 10 ? 'Veteran' :
-                      managementData.ceo_tenure >= 5 ? 'Experienced' :
-                      managementData.ceo_tenure >= 2 ? 'Developing' : 'New'})
-                  </span>
-                </div>
-                <div className="text-blue-100 text-sm">CEO Tenure</div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* ADDED: Detailed Management Scores Section */}
-      {(managementData.management_quality || managementData.corporate_governance) && (
-        <div className="mb-8 grid md:grid-cols-2 gap-6">
-          {/* Management Quality Detailed Card */}
-          {managementData.management_quality && (
-            <div className="p-6 bg-gradient-to-r from-green-50 to-emerald-50/30 rounded-xl border border-green-200/30">
-              <h4 className="font-bold text-green-800 mb-4 flex items-center gap-2">
+            {/* Management Highlights */}
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <h3 className="font-semibold mb-4 flex items-center gap-2">
                 <Award className="h-5 w-5" />
-                Management Quality Score
-              </h4>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-3xl font-bold text-green-600">
-                  {managementData.management_quality}/10
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  managementData.management_quality >= 8 ? 'bg-green-100 text-green-800' :
-                  managementData.management_quality >= 6 ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {managementData.management_quality >= 8 ? 'Excellent' : 
-                   managementData.management_quality >= 6 ? 'Good' : 
-                   managementData.management_quality >= 4 ? 'Fair' : 'Poor'}
-                </span>
-              </div>
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${
-                    managementData.management_quality >= 8 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
-                    managementData.management_quality >= 6 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
-                    'bg-gradient-to-r from-red-500 to-rose-500'
-                  }`}
-                  style={{ width: `${managementData.management_quality * 10}%` }}
-                />
-              </div>
-            </div>
-          )}
-
-          {/* Corporate Governance Detailed Card */}
-          {managementData.corporate_governance && (
-            <div className="p-6 bg-gradient-to-r from-blue-50 to-indigo-50/30 rounded-xl border border-blue-200/30">
-              <h4 className="font-bold text-blue-800 mb-4 flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Corporate Governance Score
-              </h4>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-3xl font-bold text-blue-600">
-                  {managementData.corporate_governance}/10
-                </span>
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  managementData.corporate_governance >= 8 ? 'bg-blue-100 text-blue-800' :
-                  managementData.corporate_governance >= 6 ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-red-100 text-red-800'
-                }`}>
-                  {managementData.corporate_governance >= 8 ? 'Strong' : 
-                   managementData.corporate_governance >= 6 ? 'Adequate' : 
-                   managementData.corporate_governance >= 4 ? 'Weak' : 'Poor'}
-                </span>
-              </div>
-              {/* Progress Bar */}
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${
-                    managementData.corporate_governance >= 8 ? 'bg-gradient-to-r from-blue-500 to-indigo-500' :
-                    managementData.corporate_governance >= 6 ? 'bg-gradient-to-r from-yellow-500 to-amber-500' :
-                    'bg-gradient-to-r from-red-500 to-rose-500'
-                  }`}
-                  style={{ width: `${managementData.corporate_governance * 10}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* CEO Details & Track Record with AI Photo - ENHANCED */}
-      {(managementData.ceo_name || managementData.ceo_tenure || managementData.track_record) && (
-        <div className="p-6 bg-gradient-to-r from-indigo-50 to-purple-50/30 rounded-xl border border-indigo-200/30">
-          <h3 className="font-bold mb-4 text-lg text-gray-900 flex items-center gap-2">
-            <div className="w-2 h-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"></div>
-            Leadership & Track Record
-          </h3>
-          
-          {/* CEO Details with AI Photo - ENHANCED with all CEO fields */}
-          {(managementData.ceo_name || managementData.ceo_tenure) && (
-            <div className="mb-4 pb-4 border-b border-indigo-200/40">
-              <div className="flex items-start gap-4">
-                {/* AI-Powered CEO Photo */}
-                {managementData.ceo_name && ceoFallbackUrl && (
-                  <div className="flex-shrink-0">
-                    {(ceoLoading || imageLoading) ? (
-                      <div className="w-16 h-16 bg-gray-200 rounded-full animate-pulse" />
-                    ) : (
-                      <img 
-                        src={displayCeoUrl} 
-                        alt={managementData.ceo_name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-indigo-200 shadow-sm"
-                        onError={(e) => {
-                          console.warn(`CEO image failed to load: ${e.currentTarget.src}`);
-                          if (ceoFallbackUrl) {
-                            e.currentTarget.src = ceoFallbackUrl;
-                          }
-                        }}
-                      />
-                    )}
+                Leadership Scorecard
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {managementData.management_quality && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-indigo-100">Management Quality</span>
+                    <span className="font-bold text-white">{managementData.management_quality}/10</span>
                   </div>
                 )}
+                {managementData.corporate_governance && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-indigo-100">Corporate Governance</span>
+                    <span className="font-bold text-white">{managementData.corporate_governance}/10</span>
+                  </div>
+                )}
+                {managementData.communication_quality && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-indigo-100">Communication</span>
+                    <span className="font-bold text-white">{managementData.communication_quality}/10</span>
+                  </div>
+                )}
+                {managementData.transparency_score && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-indigo-100">Transparency</span>
+                    <span className="font-bold text-white">{managementData.transparency_score}/10</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Overall Management Score Gauge */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 text-center">
+            <h3 className="font-semibold mb-4 text-white">Management Excellence</h3>
+            <div className="relative w-32 h-32 mx-auto mb-4">
+              {/* Background circle */}
+              <svg className="absolute inset-0 w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke="rgba(255, 255, 255, 0.2)"
+                  strokeWidth="8"
+                />
+                {/* Progress arc */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="none"
+                  stroke={overallScore >= 8 ? '#10b981' : overallScore >= 6 ? '#3b82f6' : overallScore >= 4 ? '#f59e0b' : '#ef4444'}
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 40}
+                  strokeDashoffset={2 * Math.PI * 40 * (1 - overallScore / 10)}
+                  style={{
+                    transition: 'stroke-dashoffset 0.5s ease-in-out'
+                  }}
+                />
+              </svg>
+              {/* Score display */}
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-2xl font-bold text-white">{overallScore.toFixed(1)}</span>
+              </div>
+            </div>
+            <div className="text-sm text-indigo-200">Out of 10.0</div>
+          </div>
+        </div>
+      </div>
+
+      {/* CEO & Leadership Team - Consistent Styling */}
+      {(managementData.ceo_name || managementData.ceo_tenure || managementData.ceo_background) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-indigo-200 rounded-xl flex items-center justify-center">
+              <User className="h-6 w-6 text-indigo-600" />
+            </div>
+            Chief Executive Officer
+          </h2>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* CEO Profile */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* CEO Basic Info */}
+              <div className="flex items-start gap-4 p-6 bg-gradient-to-br from-indigo-50 to-purple-50/30 rounded-xl border border-indigo-200/30">
                 
                 <div className="flex-1">
-                  {/* CEO Name */}
                   {managementData.ceo_name && (
-                    <div className="mb-2">
-                      <span className="text-lg font-bold text-gray-900">{managementData.ceo_name}</span>
-                      <span className="text-gray-600 text-sm ml-2">Chief Executive Officer</span>
-                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">{managementData.ceo_name}</h3>
                   )}
                   
-                  {/* CEO Tenure with detailed breakdown */}
                   {managementData.ceo_tenure && (
-                    <div className="flex items-center gap-4 mb-2">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600 text-sm font-medium">Tenure:</span>
-                        <span className="font-semibold text-gray-900">
-                          {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'year' : 'years'}
-                        </span>
-                      </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        managementData.ceo_tenure >= 10 ? 'bg-blue-100 text-blue-800' :
-                        managementData.ceo_tenure >= 5 ? 'bg-green-100 text-green-800' :
-                        managementData.ceo_tenure >= 2 ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-orange-100 text-orange-800'
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-gray-600">Tenure:</span>
+                      <span className="font-semibold text-gray-900">
+                        {managementData.ceo_tenure} {managementData.ceo_tenure === 1 ? 'Year' : 'Years'}
+                      </span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium border ${
+                        managementData.ceo_tenure >= 10 ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        managementData.ceo_tenure >= 5 ? 'bg-green-100 text-green-800 border-green-200' :
+                        managementData.ceo_tenure >= 2 ? 'bg-yellow-100 text-yellow-800 border-yellow-200' :
+                        'bg-orange-100 text-orange-800 border-orange-200'
                       }`}>
-                        {managementData.ceo_tenure >= 10 ? 'Veteran Leader' :
-                         managementData.ceo_tenure >= 5 ? 'Experienced' :
-                         managementData.ceo_tenure >= 2 ? 'Developing' : 'New Leadership'}
+                        {getTenureLabel(managementData.ceo_tenure)}
                       </span>
                     </div>
                   )}
+
+                  {managementData.ceo_background && (
+                    <div>
+                      <h4 className="font-semibold text-gray-800 mb-2">Professional Background</h4>
+                      <p className="text-gray-700 leading-relaxed">{managementData.ceo_background}</p>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Track Record */}
+              {managementData.track_record && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-indigo-600" />
+                    Performance Track Record
+                  </h4>
+                  <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                    <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                      {managementData.track_record}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-          
-          {/* Track Record - ENHANCED formatting */}
-          {managementData.track_record && (
-            <div>
-              <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <TrendingUp className="h-4 w-4" />
-                Performance Track Record
-              </h4>
-              <div className="p-4 bg-white rounded-lg border border-indigo-100">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                  {managementData.track_record}
-                </p>
-              </div>
+
+            {/* Management Scores Summary */}
+            <div className="space-y-4">
+              <h4 className="font-semibold text-gray-900 mb-4">Leadership Scores</h4>
+              
+              {managementData.management_quality && (
+                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Management Quality</span>
+                    <span className={`text-xl font-bold ${getScoreColor(managementData.management_quality)}`}>
+                      {managementData.management_quality}/10
+                    </span>
+                  </div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getScoreBadge(managementData.management_quality)}`}>
+                    {getScoreLabel(managementData.management_quality)}
+                  </span>
+                </div>
+              )}
+
+              {managementData.corporate_governance && (
+                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Corporate Governance</span>
+                    <span className={`text-xl font-bold ${getScoreColor(managementData.corporate_governance)}`}>
+                      {managementData.corporate_governance}/10
+                    </span>
+                  </div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getScoreBadge(managementData.corporate_governance)}`}>
+                    {getScoreLabel(managementData.corporate_governance)}
+                  </span>
+                </div>
+              )}
+
+              {managementData.communication_quality && (
+                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Communication</span>
+                    <span className={`text-xl font-bold ${getScoreColor(managementData.communication_quality)}`}>
+                      {managementData.communication_quality}/10
+                    </span>
+                  </div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getScoreBadge(managementData.communication_quality)}`}>
+                    {getScoreLabel(managementData.communication_quality)}
+                  </span>
+                </div>
+              )}
+
+              {managementData.transparency_score && (
+                <div className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-gray-600">Transparency</span>
+                    <span className={`text-xl font-bold ${getScoreColor(managementData.transparency_score)}`}>
+                      {managementData.transparency_score}/10
+                    </span>
+                  </div>
+                  <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium border ${getScoreBadge(managementData.transparency_score)}`}>
+                    {getScoreLabel(managementData.transparency_score)}
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       )}
 
-      {/* ADDED: Overall Management Assessment */}
-      {(managementData.management_quality && managementData.corporate_governance) && (
-        <div className="mt-6 p-6 bg-gradient-to-r from-slate-50 to-gray-50/30 rounded-xl border border-gray-200/30">
-          <h4 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Overall Management Assessment
-          </h4>
-          
-          <div className="grid md:grid-cols-3 gap-4 text-center">
-            <div className="p-4 bg-white rounded-lg border border-gray-100">
-              <div className="text-2xl font-bold text-gray-900 mb-1">
-                {((managementData.management_quality + managementData.corporate_governance) / 2).toFixed(1)}/10
-              </div>
-              <div className="text-sm text-gray-600">Combined Score</div>
+      {/* Leadership Team & Strategic Decisions - Consistent Styling */}
+      {(managementData.leadership_team?.length || managementData.strategic_decisions?.length) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 rounded-xl flex items-center justify-center">
+              <Users className="h-6 w-6 text-purple-600" />
             </div>
-            
-            <div className="p-4 bg-white rounded-lg border border-gray-100">
-              <div className={`text-2xl font-bold mb-1 ${
-                (managementData.management_quality + managementData.corporate_governance) / 2 >= 7 ? 'text-green-600' : 
-                (managementData.management_quality + managementData.corporate_governance) / 2 >= 5 ? 'text-yellow-600' : 
-                'text-red-600'
-              }`}>
-                {(managementData.management_quality + managementData.corporate_governance) / 2 >= 7 ? 'Strong' : 
-                 (managementData.management_quality + managementData.corporate_governance) / 2 >= 5 ? 'Moderate' : 
-                 'Weak'}
-              </div>
-              <div className="text-sm text-gray-600">Leadership Rating</div>
-            </div>
-            
-            {managementData.ceo_tenure && (
-              <div className="p-4 bg-white rounded-lg border border-gray-100">
-                <div className="text-2xl font-bold text-gray-900 mb-1">
-                  {managementData.ceo_tenure}
+            Leadership Team & Strategic Execution
+          </h2>
+
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Leadership Team */}
+            {managementData.leadership_team?.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-4">Key Executives</h3>
+                <div className="space-y-3">
+                  {managementData.leadership_team.map((exec: any, index: number) => (
+                    <div key={index} className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="font-semibold text-gray-900">{exec.name || exec}</div>
+                      {exec.role && <div className="text-gray-600 text-sm">{exec.role}</div>}
+                    </div>
+                  ))}
                 </div>
-                <div className="text-sm text-gray-600">Years of Leadership</div>
+              </div>
+            )}
+
+            {/* Strategic Decisions */}
+            {managementData.strategic_decisions?.length > 0 && (
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-4">Key Strategic Decisions</h3>
+                <div className="space-y-3">
+                  {managementData.strategic_decisions.map((decision: any, index: number) => (
+                    <div key={index} className="p-4 bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                      <div className="font-semibold text-gray-900 mb-1">
+                        {typeof decision === 'object' ? decision.decision : decision}
+                      </div>
+                      {typeof decision === 'object' && decision.outcome && (
+                        <div className="text-gray-600 text-sm">{decision.outcome}</div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* Debug Information (remove in production)
-      {process.env.NODE_ENV === 'development' && (
-        <div className="mt-4 p-4 bg-gray-100 rounded-lg text-xs">
-          <strong>Debug Info:</strong>
-          <div>CEO Photo URLs: {JSON.stringify(companyImages?.ceo_photo_urls || [])}</div>
-          <div>Current CEO Photo: {ceoPhotoUrl || 'null'}</div>
-          <div>Fallback CEO URL: {ceoFallbackUrl || 'null'}</div>
-          <div>Management Data: {JSON.stringify(managementData, null, 2)}</div>
+      {/* Governance & Compensation - Consistent Styling */}
+      {(managementData.board_independence || managementData.executive_compensation || managementData.shareholder_friendliness) && (
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/50 p-8 hover:shadow-xl transition-all duration-300">
+          <h2 className="text-2xl font-bold mb-6 text-gray-900 flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 rounded-xl flex items-center justify-center">
+              <Shield className="h-6 w-6 text-green-600" />
+            </div>
+            Corporate Governance
+          </h2>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {managementData.board_independence && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Scale className="h-4 w-4 text-green-600" />
+                  Board Independence
+                </h4>
+                <p className="text-gray-700">{managementData.board_independence}</p>
+              </div>
+            )}
+
+            {managementData.executive_compensation && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4 text-green-600" />
+                  Executive Compensation
+                </h4>
+                <p className="text-gray-700">{managementData.executive_compensation}</p>
+              </div>
+            )}
+
+            {managementData.shareholder_friendliness && (
+              <div className="p-6 bg-white rounded-xl border border-gray-200 shadow-sm">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-green-600" />
+                  Shareholder Relations
+                </h4>
+                <p className="text-gray-700">{managementData.shareholder_friendliness}</p>
+              </div>
+            )}
+          </div>
         </div>
-      )} */}
+      )}
     </div>
   );
 };
