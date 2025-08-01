@@ -69,7 +69,7 @@ The system employs a sophisticated **multi-agent orchestration** pattern:
 - **Parallel processing** capabilities for improved performance
 
 ### 📊 Comprehensive Analysis Coverage
-- **Real-time Financial Data** - Live data integration via **yfinance(https://ranaroussi.github.io/yfinance/)** API
+- **Real-time Financial Data** - Live data integration via **[yfinance](https://ranaroussi.github.io/yfinance/)** API
 - **Financial Statement Analysis** - Complete income statement, balance sheet, and cash flow analysis
 - **Advanced Ratio Analysis** - 20+ financial ratios with industry comparisons
 - **Business Model Evaluation** - Competitive advantages, market position, growth drivers
