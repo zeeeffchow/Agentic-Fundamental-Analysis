@@ -160,11 +160,10 @@ export const AnalysisResults: React.FC = () => {
     );
 
     return (
-      <div className="bg-white/90 backdrop-blur-sm border-b border-gray-200/60 shadow-sm">
+      <div className="bg-gradient-to-r from-blue-50/90 to-indigo-50/90 backdrop-blur-sm border-b border-blue-200/60 shadow-sm">
         <div className="w-full px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center border border-gray-200/50 shadow-sm overflow-hidden">
                 {(logoLoading || imageLoading) ? (
                   <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
                 ) : (
@@ -179,7 +178,6 @@ export const AnalysisResults: React.FC = () => {
                     }}
                   />
                 )}
-              </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
                   {analysis.company.ticker}
@@ -219,7 +217,7 @@ export const AnalysisResults: React.FC = () => {
       )}
 
       {/* Enhanced Tabs with Theme Colors */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-16 z-20 shadow-sm">
+      <div className="bg-blue-50/60 backdrop-blur-sm border-b border-blue-100 sticky top-16 z-20 shadow-sm">
         <div className="w-full">
           {/* Desktop Tabs */}
           <div className="hidden md:block">

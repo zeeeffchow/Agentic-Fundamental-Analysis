@@ -1,5 +1,5 @@
 import React from 'react';
-import { Star, TrendingUp } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface TopBarProps {
@@ -10,7 +10,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenWatchlist }) => {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 shadow-sm border-b border-gray-200 sticky top-0 z-30">
       <div className="w-full px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo */}
@@ -19,7 +19,7 @@ export const TopBar: React.FC<TopBarProps> = ({ onOpenWatchlist }) => {
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
             <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
-              <TrendingUp className="h-5 w-5 text-white" />
+              <img src="/lego.svg" alt="Fundamentals" className="h-5 w-5" />
             </div>
             <span className="font-bold text-xl text-gray-900">fundamentals</span>
           </button>
